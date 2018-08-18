@@ -3,8 +3,8 @@ package org.dreamscale.flow.activity;
 
 public interface MessageLogger {
 
-	void flush();
+    void flush();
 
-	void writeMessage(Long taskId, Object message);
+    void writeMessage(Long taskId, Object message);
 
 }

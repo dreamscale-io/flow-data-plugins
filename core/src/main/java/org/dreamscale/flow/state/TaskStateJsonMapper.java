@@ -11,25 +11,25 @@ import java.util.List;
 
 public class TaskStateJsonMapper {
 
-	private ObjectMapper jsonMapper;
+    private ObjectMapper jsonMapper;
 
-	public TaskStateJsonMapper() {
-		this.jsonMapper = new ObjectMapper();
-		jsonMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-	}
+    public TaskStateJsonMapper() {
+        this.jsonMapper = new ObjectMapper();
+        jsonMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+    }
 
-	public String toJson(List<TaskState> taskStateList) throws JsonProcessingException {
-		return jsonMapper.writeValueAsString(taskStateList);
-	}
+    public String toJson(List<TaskState> taskStateList) throws JsonProcessingException {
+        return jsonMapper.writeValueAsString(taskStateList);
+    }
 
-	public List<TaskState> toList(String jsonString) throws IOException {
-		if (jsonString == null) {
-			return new ArrayList<>();
-		}
+    public List<TaskState> toList(String jsonString) throws IOException {
+        if (jsonString == null) {
+            return new ArrayList<>();
+        }
 
-		TaskState[] taskStates = jsonMapper.readValue(jsonString, TaskState[].class);
-		List<TaskState> taskStateImmutableList = Arrays.asList(taskStates);
-		return new ArrayList<>(taskStateImmutableList);
-	}
+        TaskState[] taskStates = jsonMapper.readValue(jsonString, TaskState[].class);
+        List<TaskState> taskStateImmutableList = Arrays.asList(taskStates);
+        return new ArrayList<>(taskStateImmutableList);
+    }
 
 }

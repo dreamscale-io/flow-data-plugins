@@ -13,190 +13,190 @@ import java.time.LocalDateTime
 
 class TestBatchPublisher extends Specification {
 
-	BatchPublisher batchPublisher
-	File tempDir
-	JSONConverter jsonConverter = new JSONConverter()
-	MockTimeService timeService = new MockTimeService()
+    BatchPublisher batchPublisher
+    File tempDir
+    JSONConverter jsonConverter = new JSONConverter()
+    MockTimeService timeService = new MockTimeService()
 
-	BatchClient mockBatchClient
+    BatchClient mockBatchClient
 
-	void setup() {
-		tempDir = new File(File.createTempFile("temp", ".txt").parentFile, "queue-dir")
-		tempDir.deleteDir()
-		tempDir.mkdirs()
+    void setup() {
+        tempDir = new File(File.createTempFile("temp", ".txt").parentFile, "queue-dir")
+        tempDir.deleteDir()
+        tempDir.mkdirs()
 
-		org.dreamscale.flow.Logger logger = Mock(org.dreamscale.flow.Logger)
-		batchPublisher = new BatchPublisher(tempDir, logger, timeService)
+        org.dreamscale.flow.Logger logger = Mock(org.dreamscale.flow.Logger)
+        batchPublisher = new BatchPublisher(tempDir, logger, timeService)
 
-		mockBatchClient = Mock(BatchClient)
-		batchPublisher.batchClient = mockBatchClient
-	}
+        mockBatchClient = Mock(BatchClient)
+        batchPublisher.batchClient = mockBatchClient
+    }
 
-	def cleanup() {
-		tempDir.delete()
+    def cleanup() {
+        tempDir.delete()
 
-		List<File> batchFiles = batchPublisher.getBatchesToPublish()
-		batchFiles.each { File file ->
-			file.delete()
-		}
-	}
+        List<File> batchFiles = batchPublisher.getBatchesToPublish()
+        batchFiles.each { File file ->
+            file.delete()
+        }
+    }
 
-	def "commitBatch SHOULD create stuff to publish"() {
-		given:
-		File tmpFile = batchPublisher.createActiveFile("message")
-		tmpFile << "some stuff"
+    def "commitBatch SHOULD create stuff to publish"() {
+        given:
+        File tmpFile = batchPublisher.createActiveFile("message")
+        tmpFile << "some stuff"
 
-		when:
-		batchPublisher.commitActiveFiles()
+        when:
+        batchPublisher.commitActiveFiles()
 
-		then:
-		assert batchPublisher.hasSomethingToPublish()
-	}
+        then:
+        assert batchPublisher.hasSomethingToPublish()
+    }
 
-	private NewEditorActivity createEditorActivity() {
-		NewEditorActivity.builder()
-				.taskId(1)
-				.endTime(LocalDateTime.now())
-				.durationInSeconds(5)
-				.filePath("hello.txt")
-				.isModified(true)
-				.build();
-	}
+    private NewEditorActivity createEditorActivity() {
+        NewEditorActivity.builder()
+                .taskId(1)
+                .endTime(LocalDateTime.now())
+                .durationInSeconds(5)
+                .filePath("hello.txt")
+                .isModified(true)
+                .build();
+    }
 
-	private File createBatchFile() {
-		NewEditorActivity editorActivity = createEditorActivity()
-		File tmpFile = batchPublisher.createActiveFile("file")
-		tmpFile << jsonConverter.toJSON(editorActivity) + "\n"
-		tmpFile
-	}
+    private File createBatchFile() {
+        NewEditorActivity editorActivity = createEditorActivity()
+        File tmpFile = batchPublisher.createActiveFile("file")
+        tmpFile << jsonConverter.toJSON(editorActivity) + "\n"
+        tmpFile
+    }
 
-	def "convertBatchFileToObject SHOULD create a Batch object that can be sent to the server"() {
-		given:
-		File tmpFile = createBatchFile()
+    def "convertBatchFileToObject SHOULD create a Batch object that can be sent to the server"() {
+        given:
+        File tmpFile = createBatchFile()
 
-		when:
-		NewIFMBatch batch = batchPublisher.convertBatchFileToObject(tmpFile)
+        when:
+        NewIFMBatch batch = batchPublisher.convertBatchFileToObject(tmpFile)
 
-		then:
-		assert batch != null
-		assert batch.editorActivityList.size() == 1
-	}
+        then:
+        assert batch != null
+        assert batch.editorActivityList.size() == 1
+    }
 
-	def "convertBatchFileToObject SHOULD support events "() {
+    def "convertBatchFileToObject SHOULD support events "() {
 
-		given:
-		NewBatchEvent batchEvent = NewBatchEvent.builder()
-				.taskId(1)
-				.position(LocalDateTime.now())
-				.type(EventType.AWESOME)
-				.comment("hello!")
-				.build();
+        given:
+        NewBatchEvent batchEvent = NewBatchEvent.builder()
+                .taskId(1)
+                .position(LocalDateTime.now())
+                .type(EventType.AWESOME)
+                .comment("hello!")
+                .build();
 
 
-		File tmpFile = File.createTempFile("messages", ".log")
-		tmpFile << jsonConverter.toJSON(batchEvent) + "\n"
+        File tmpFile = File.createTempFile("messages", ".log")
+        tmpFile << jsonConverter.toJSON(batchEvent) + "\n"
 
-		when:
-		NewIFMBatch batch = batchPublisher.convertBatchFileToObject(tmpFile)
+        when:
+        NewIFMBatch batch = batchPublisher.convertBatchFileToObject(tmpFile)
 
-		then:
-		assert batch != null
-		assert batch.eventList.size() == 1
-	}
+        then:
+        assert batch != null
+        assert batch.eventList.size() == 1
+    }
 
-	def "publishBatches SHOULD send all batches to the server and delete files"() {
-		given:
-		createBatchFile()
+    def "publishBatches SHOULD send all batches to the server and delete files"() {
+        given:
+        createBatchFile()
 
-		when:
-		batchPublisher.commitActiveFiles()
-		batchPublisher.publishBatches()
+        when:
+        batchPublisher.commitActiveFiles()
+        batchPublisher.publishBatches()
 
-		then:
-		assert batchPublisher.hasSomethingToPublish() == false
-		1 * mockBatchClient.addIFMBatch(_)
-	}
+        then:
+        assert batchPublisher.hasSomethingToPublish() == false
+        1 * mockBatchClient.addIFMBatch(_)
+    }
 
-	def "publishBatches SHOULD mark file as failed if parsing fails"() {
-		given:
-		File file = batchPublisher.createActiveFile("file")
-		file << "illegal json"
+    def "publishBatches SHOULD mark file as failed if parsing fails"() {
+        given:
+        File file = batchPublisher.createActiveFile("file")
+        file << "illegal json"
 
-		when:
-		batchPublisher.commitActiveFiles()
-		batchPublisher.publishBatches()
+        when:
+        batchPublisher.commitActiveFiles()
+        batchPublisher.publishBatches()
 
-		then:
-		File[] files = batchPublisher.failedDir.listFiles()
-		assert files.length == 1
-	}
+        then:
+        File[] files = batchPublisher.failedDir.listFiles()
+        assert files.length == 1
+    }
 
-	def "publishBatches should skip batch file which fails to publish"() {
-		given:
-		createBatchFile()
-		mockBatchClient.addIFMBatch(_) >> { throw new RuntimeException("Publication Failure") }
+    def "publishBatches should skip batch file which fails to publish"() {
+        given:
+        createBatchFile()
+        mockBatchClient.addIFMBatch(_) >> { throw new RuntimeException("Publication Failure") }
 
-		when:
-		batchPublisher.commitActiveFiles()
-		batchPublisher.publishBatches()
+        when:
+        batchPublisher.commitActiveFiles()
+        batchPublisher.publishBatches()
 
-		then:
-		assert batchPublisher.hasSomethingToPublish() == false
-		assert batchPublisher.publishDir.listFiles().length == 1
-	}
+        then:
+        assert batchPublisher.hasSomethingToPublish() == false
+        assert batchPublisher.publishDir.listFiles().length == 1
+    }
 
-	def "publishBatches should set aside batches where the task cannot be found and resume on next session"() {
-		given:
-		createBatchFile()
-		mockBatchClient.addIFMBatch(_) >> { throw new NotFoundException("task not found") }
+    def "publishBatches should set aside batches where the task cannot be found and resume on next session"() {
+        given:
+        createBatchFile()
+        mockBatchClient.addIFMBatch(_) >> { throw new NotFoundException("task not found") }
 
-		when:
-		batchPublisher.commitActiveFiles()
-		batchPublisher.publishBatches()
+        when:
+        batchPublisher.commitActiveFiles()
+        batchPublisher.publishBatches()
 
-		then:
-		assert batchPublisher.hasSomethingToPublish() == false
+        then:
+        assert batchPublisher.hasSomethingToPublish() == false
 
-		and:
-		assert batchPublisher.retryNextSessionDir.listFiles().length == 1
+        and:
+        assert batchPublisher.retryNextSessionDir.listFiles().length == 1
 
-		when:
-		batchPublisher.setBatchClient(mockBatchClient)
+        when:
+        batchPublisher.setBatchClient(mockBatchClient)
 
-		then:
-		assert batchPublisher.hasSomethingToPublish() == true
-	}
+        then:
+        assert batchPublisher.hasSomethingToPublish() == true
+    }
 
-	def "publishBatches should delay retry of failed batch until tomorrow"() {
-		given:
-		int clientCallCount = 0
-		createBatchFile()
-		mockBatchClient.addIFMBatch(_) >> {
-			clientCallCount++
-			throw new Exception("you lose!")
-		}
+    def "publishBatches should delay retry of failed batch until tomorrow"() {
+        given:
+        int clientCallCount = 0
+        createBatchFile()
+        mockBatchClient.addIFMBatch(_) >> {
+            clientCallCount++
+            throw new Exception("you lose!")
+        }
 
-		when:
-		batchPublisher.commitActiveFiles()
-		batchPublisher.publishBatches()
+        when:
+        batchPublisher.commitActiveFiles()
+        batchPublisher.publishBatches()
 
-		then:
-		assert clientCallCount == 1
-		assert batchPublisher.hasSomethingToPublish() == false
-		assert batchPublisher.publishDir.listFiles().length == 1
+        then:
+        assert clientCallCount == 1
+        assert batchPublisher.hasSomethingToPublish() == false
+        assert batchPublisher.publishDir.listFiles().length == 1
 
-		when:
-		batchPublisher.publishBatches()
+        when:
+        batchPublisher.publishBatches()
 
-		then:
-		assert clientCallCount == 1
+        then:
+        assert clientCallCount == 1
 
-		when:
-		timeService.plusDays(2)
-		batchPublisher.publishBatches()
+        when:
+        timeService.plusDays(2)
+        batchPublisher.publishBatches()
 
-		then:
-		assert clientCallCount == 2
-	}
+        then:
+        assert clientCallCount == 2
+    }
 
 }

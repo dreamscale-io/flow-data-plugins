@@ -15,68 +15,68 @@ import org.dreamscale.flow.state.TaskState;
 
 public class ActionSupport {
 
-	public static IFMController getIFMController(AnActionEvent e) {
-		IFMController controller = null;
-		if (e != null && e.getProject() != null) {
-			controller = IdeaFlowApplicationComponent.getIFMController();
-		}
-		return controller;
-	}
+    public static IFMController getIFMController(AnActionEvent e) {
+        IFMController controller = null;
+        if (e != null && e.getProject() != null) {
+            controller = IdeaFlowApplicationComponent.getIFMController();
+        }
+        return controller;
+    }
 
-	public static String getActiveIdeaFlowName(AnActionEvent e) {
-		IFMController controller = getIFMController(e);
-		return controller == null ? null : controller.getActiveTaskName();
-	}
+    public static String getActiveIdeaFlowName(AnActionEvent e) {
+        IFMController controller = getIFMController(e);
+        return controller == null ? null : controller.getActiveTaskName();
+    }
 
-	public static TaskState getActiveTask(AnActionEvent e) {
-		IFMController controller = getIFMController(e);
-		return controller == null ? null : controller.getActiveTask();
-	}
+    public static TaskState getActiveTask(AnActionEvent e) {
+        IFMController controller = getIFMController(e);
+        return controller == null ? null : controller.getActiveTask();
+    }
 
-	public static boolean isTaskActive(AnActionEvent e) {
-		IFMController controller = getIFMController(e);
-		return controller != null && controller.isTaskActive();
-	}
+    public static boolean isTaskActive(AnActionEvent e) {
+        IFMController controller = getIFMController(e);
+        return controller != null && controller.isTaskActive();
+    }
 
-	public static boolean isRecording(AnActionEvent e) {
-		IFMController controller = getIFMController(e);
-		return controller != null && controller.isRecording();
-	}
+    public static boolean isRecording(AnActionEvent e) {
+        IFMController controller = getIFMController(e);
+        return controller != null && controller.isRecording();
+    }
 
-	public static boolean isTaskActiveAndRecording(AnActionEvent e) {
-		return isRecording(e) && isTaskActive(e);
-	}
+    public static boolean isTaskActiveAndRecording(AnActionEvent e) {
+        return isRecording(e) && isTaskActive(e);
+    }
 
-	public static boolean isPaused(AnActionEvent e) {
-		IFMController controller = getIFMController(e);
-		return controller != null && controller.isPaused();
-	}
+    public static boolean isPaused(AnActionEvent e) {
+        IFMController controller = getIFMController(e);
+        return controller != null && controller.isPaused();
+    }
 
-	public static String getSelectedText(Editor editor) {
-		if (editor == null) {
-			return null;
-		}
+    public static String getSelectedText(Editor editor) {
+        if (editor == null) {
+            return null;
+        }
 
-		SelectionModel selectionModel = editor.getSelectionModel();
-		return selectionModel.getSelectedText();
-	}
+        SelectionModel selectionModel = editor.getSelectionModel();
+        return selectionModel.getSelectedText();
+    }
 
-	public static void disableWhenNotRecording(AnActionEvent e) {
-		Presentation presentation = e.getPresentation();
-		presentation.setEnabled(isTaskActiveAndRecording(e));
-	}
+    public static void disableWhenNotRecording(AnActionEvent e) {
+        Presentation presentation = e.getPresentation();
+        presentation.setEnabled(isTaskActiveAndRecording(e));
+    }
 
-	public static String getActiveFilePath(Project project, VirtualFile file) {
-		String fileName = null;
+    public static String getActiveFilePath(Project project, VirtualFile file) {
+        String fileName = null;
 
-		if (file != null) {
-			fileName = VirtualFileActivityHandler.getFullFilePathOrDefault(file, project, file.getName());
-		}
-		return fileName;
-	}
+        if (file != null) {
+            fileName = VirtualFileActivityHandler.getFullFilePathOrDefault(file, project, file.getName());
+        }
+        return fileName;
+    }
 
-	public static IdeaFlowSettingsTaskManager getTaskManager() {
-		return IdeaFlowSettings.getInstance().getTaskManager();
-	}
+    public static IdeaFlowSettingsTaskManager getTaskManager() {
+        return IdeaFlowSettings.getInstance().getTaskManager();
+    }
 
 }

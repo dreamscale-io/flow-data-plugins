@@ -7,12 +7,12 @@ import org.dreamscale.flow.intellij.action.ActionSupport;
 
 public class FlushBatchEvent extends AnAction {
 
-	@Override
-	public void actionPerformed(AnActionEvent anActionEvent) {
-		IFMController controller = ActionSupport.getIFMController(anActionEvent);
-		if (controller != null) {
-			controller.flushBatch();
-		}
-	}
+    @Override
+    public void actionPerformed(AnActionEvent anActionEvent) {
+        IFMController controller = ActionSupport.getIFMController(anActionEvent);
+        if (controller != null) {
+            controller.flushBatch();
+        }
+    }
 
 }

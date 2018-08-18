@@ -7,8 +7,8 @@ package org.dreamscale.flow.activity;
  */
 public class ServerUnavailableException extends RuntimeException {
 
-	ServerUnavailableException(String message) {
-		super(message);
-	}
+    ServerUnavailableException(String message) {
+        super(message);
+    }
 
 }

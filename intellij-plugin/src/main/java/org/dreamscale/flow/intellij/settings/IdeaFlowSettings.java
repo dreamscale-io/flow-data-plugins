@@ -11,62 +11,62 @@ import com.intellij.util.xmlb.annotations.Transient;
 //)
 public class IdeaFlowSettings implements PersistentStateComponent<IdeaFlowSettings> {
 
-	public static IdeaFlowSettings getInstance() {
-		return ServiceManager.getService(IdeaFlowSettings.class);
-	}
+    public static IdeaFlowSettings getInstance() {
+        return ServiceManager.getService(IdeaFlowSettings.class);
+    }
 
-	private String apiUrl = "http://ideaflowdx.openmastery.org";
-	private String apiKey;
-	private int recentTaskListSize = 5;
-	private String taskListJsonString;
-	@Transient
-	private IdeaFlowSettingsTaskManager taskManager = new IdeaFlowSettingsTaskManager(this);
+    private String apiUrl = "http://ideaflowdx.openmastery.org";
+    private String apiKey;
+    private int recentTaskListSize = 5;
+    private String taskListJsonString;
+    @Transient
+    private IdeaFlowSettingsTaskManager taskManager = new IdeaFlowSettingsTaskManager(this);
 
-	public String getTaskListJsonString() {
-		return taskListJsonString;
-	}
+    public String getTaskListJsonString() {
+        return taskListJsonString;
+    }
 
-	public void setTaskListJsonString(String taskListJsonString) {
-		this.taskListJsonString = taskListJsonString;
-	}
+    public void setTaskListJsonString(String taskListJsonString) {
+        this.taskListJsonString = taskListJsonString;
+    }
 
-	public IdeaFlowSettingsTaskManager getTaskManager() {
-		return taskManager;
-	}
+    public IdeaFlowSettingsTaskManager getTaskManager() {
+        return taskManager;
+    }
 
-	public String getApiUrl() {
-		return apiUrl;
-	}
+    public String getApiUrl() {
+        return apiUrl;
+    }
 
-	public void setApiUrl(String apiUrl) {
-		this.apiUrl = apiUrl;
-	}
+    public void setApiUrl(String apiUrl) {
+        this.apiUrl = apiUrl;
+    }
 
-	public String getApiKey() {
-		return apiKey;
-	}
+    public String getApiKey() {
+        return apiKey;
+    }
 
-	public void setApiKey(String apiKey) {
-		this.apiKey = apiKey;
-	}
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
 
-	public int getRecentTaskListSize() {
-		return recentTaskListSize;
-	}
+    public int getRecentTaskListSize() {
+        return recentTaskListSize;
+    }
 
-	public void setRecentTaskListSize(int recentTaskListSize) {
-		this.recentTaskListSize = recentTaskListSize;
-	}
+    public void setRecentTaskListSize(int recentTaskListSize) {
+        this.recentTaskListSize = recentTaskListSize;
+    }
 
-	@Override
-	public IdeaFlowSettings getState() {
-		return this;
-	}
+    @Override
+    public IdeaFlowSettings getState() {
+        return this;
+    }
 
-	@Override
-	public void loadState(IdeaFlowSettings ideaFlowSettings) {
-		XmlSerializerUtil.copyBean(ideaFlowSettings, this);
-	}
+    @Override
+    public void loadState(IdeaFlowSettings ideaFlowSettings) {
+        XmlSerializerUtil.copyBean(ideaFlowSettings, this);
+    }
 
 
 }
