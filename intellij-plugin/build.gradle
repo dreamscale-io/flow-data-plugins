@@ -1,0 +1,170 @@
+apply plugin: 'groovy'
+apply plugin: 'idea'
+
+File uploadDir = new File(buildDir, 'upload')
+File pluginFile = new File(projectDir, 'ideaflow-plugin.zip')
+File pluginXmlFile = new File(projectDir, 'META-INF/plugin.xml')
+
+repositories {
+	mavenCentral()
+}
+
+configurations {
+	ftpAntTask
+}
+
+dependencies {
+	ftpAntTask("org.apache.ant:ant-commons-net:1.9.3") {
+		module("commons-net:commons-net:1.4.1") {
+			dependencies "oro:oro:2.0.8:jar"
+		}
+	}
+
+	compile project(":core")
+}
+
+
+
+
+String ftpPassword = null
+task upload(dependsOn: ['assertPackagedPluginVersionMatchesVersionInSource', 'prepareFilesForUpload']) {
+	doFirst {
+		def console = System.console()
+		if (console != null) {
+			ftpPassword = console.readPassword('> Please enter openmastery.org FTP password: ') as String
+		} else {
+			throw new GradleException("System.console is null, make sure you're not running gradle in daemon mode")
+		}
+	}
+	doLast {
+		ant {
+			taskdef(name: 'ftp',
+					classname: 'org.apache.tools.ant.taskdefs.optional.net.FTP',
+					classpath: configurations.ftpAntTask.asPath)
+			ftp(server: 'openmastery.org', userid: 'janelle@openmastery.org', password: ftpPassword, passive: 'yes') {
+				fileset(dir: 'build/upload')
+			}
+		}
+	}
+}
+
+task prepareFilesForUpload(dependsOn: ['createUpdatePluginXmlFile', 'copyIntellijPluginToUploadDir'])
+
+task copyIntellijPluginToUploadDir(type: Copy, dependsOn: clean) {
+	from pluginFile
+	into uploadDir
+	mustRunAfter clean
+}
+
+task createUpdatePluginXmlFile(dependsOn: clean) {
+	mustRunAfter clean
+
+	doLast {
+		String pluginId = getPluginId(pluginXmlFile)
+		String pluginVersion = getPluginVersion(pluginXmlFile)
+
+		uploadDir.mkdirs()
+		new File(uploadDir, 'updatePlugins.xml').write """<plugins>
+    <plugin id="${pluginId}" url="http://openmastery.org/tools/${pluginFile.name}" version="${pluginVersion}"/>
+</plugins>
+"""
+	}
+}
+
+private String getPluginId(File pluginXmlFile) {
+	getPluginString(pluginXmlFile, "id", /(?m)<id>(\S+)<.id>/)
+}
+
+private String getPluginVersion(File pluginXmlFile) {
+	getPluginString(pluginXmlFile, "version", /(?m)<version>(\d+\.\d+)<.version>/)
+}
+
+private String getPluginString(File file, String description, String regex) {
+	String pluginXmlContent = file.text
+	def matcher = pluginXmlContent =~ regex
+	if (!matcher) {
+		throw new GradleException("Unable to determine plugin ${description}")
+	}
+	matcher.group(1)
+}
+
+
+task extractPluginJarFromPluginArtifact(type: Copy) {
+	from zipTree(pluginFile)
+	into "build/tmp/"
+	include "ideaflow-plugin/lib/ideaflow-plugin.jar"
+	eachFile { FileCopyDetails details ->
+		if (details.relativePath.isFile()) {
+			details.relativePath = RelativePath.parse(true, "ideaflow-plugin.jar")
+		}
+	}
+}
+
+task extractPluginXmlFromPluginArtifact(type: Copy, dependsOn: extractPluginJarFromPluginArtifact) {
+	from zipTree("build/tmp/ideaflow-plugin.jar")
+	into "build/tmp/"
+	include "META-INF/plugin.xml"
+}
+
+
+task assertPackagedPluginVersionMatchesVersionInSource(dependsOn: extractPluginXmlFromPluginArtifact) << {
+	File packagedPluginXmlFile = file("build/tmp/META-INF/plugin.xml")
+
+	String sourcePluginVersion = getPluginVersion(pluginXmlFile)
+	String packagedPluginVersion = getPluginVersion(packagedPluginXmlFile)
+	if (sourcePluginVersion != packagedPluginVersion) {
+		throw new GradleException("Plugin source version=${sourcePluginVersion} does not match packaged version=${packagedPluginVersion} - "
+				+ "make sure you prepared the plugin via IDEA before uploading (see Readme.md)")
+	}
+}
+
+
+
+
+/**
+ * IDEA project file generation, with a convoluated attempt to preserve the IDEA JDK setting
+ */
+
+String getModuleJdkName() {
+	File moduleFile = file('intellij-plugin.iml')
+	String moduleJdkName = null
+	if (moduleFile.exists()) {
+		def module = new XmlParser().parseText(moduleFile.text)
+		def jdkNode = module.component.orderEntry.find { it['@type'] == 'jdk' }
+		if (jdkNode) {
+			moduleJdkName = jdkNode['@jdkName']
+		}
+	}
+	moduleJdkName
+}
+String moduleJdkName = getModuleJdkName()
+
+idea {
+	module {
+		name = 'intellij-plugin'
+
+		iml {
+			whenMerged { module ->
+				if (moduleJdkName) {
+					module.jdkName = moduleJdkName
+				}
+			}
+
+			withXml {
+				Node module = it.asNode()
+				module['@type'] = 'PLUGIN_MODULE'
+				module.appendNode('component', [name: 'DevKit.ModuleBuildProperties', url: 'file://$MODULE_DIR$/META-INF/plugin.xml'])
+
+				Node moduleRootManager = module.component.find { it['@name'] == 'ModuleRootManager' }
+				if (moduleRootManager) {
+					module.remove(moduleRootManager)
+				}
+
+				def jdkNode = module.component.orderEntry.find { it['@type'] == 'jdk' }
+				if (jdkNode) {
+					jdkNode['@jdkType'] = "IDEA JDK"
+				}
+			}
+		}
+	}
+}

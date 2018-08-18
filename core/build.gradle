@@ -1,0 +1,49 @@
+apply plugin: 'groovy'
+apply plugin: 'maven-publish'
+apply plugin: 'idea'
+
+
+repositories {
+	mavenLocal()
+	jcenter()
+	maven {
+		url "https://dl.bintray.com/openmastery/maven"
+	}
+}
+
+// intellij bundles slf4j-api and failure to exclude invites linkage errors...
+configurations.all {
+  exclude group: "org.slf4j", module: "slf4j-api"
+}
+
+dependencies {
+	compile 'org.openmastery:ifm-publisher-client:0.+'
+
+	testCompile 'org.openmastery:ifm-publisher-test:0.+'
+	testCompile 'org.slf4j:slf4j-api:1.7.12'
+	testCompile 'com.google.guava:guava:18.0'
+	testCompile 'org.reflections:reflections:0.9.9-RC1'
+	testCompile "cglib:cglib-nodep:3.2.0"
+	testCompile 'org.objenesis:objenesis:1.3'
+	testCompile "org.spockframework:spock-spring:1.0-groovy-2.4"
+	testCompile "org.springframework.boot:spring-boot-starter-test:1.3.5.RELEASE"
+}
+
+jar.baseName = 'ideaflow-core'
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			artifactId project.ext.artifactId
+			from components.java
+		}
+	}
+}
+
+task publishLocal(dependsOn: publishToMavenLocal)
+
+idea.module.iml {
+    whenMerged { module ->
+        module.dependencies*.exported = true
+    }
+}

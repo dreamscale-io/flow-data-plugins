@@ -1,0 +1,68 @@
+<idea-plugin version="2">
+	<id>love.dreamscale.flow</id>
+	<name>@torchie Flow Metrics</name>
+	<description>Capture the tacit knowledge of troubleshooting sessions into your @torchie RealTime Scrapbook,
+		along with automated Flow Metrics that measure the WTFs you experience as you work.
+		What's the biggest cause of WTFs across your Team?  Who's struggling with a WTF right now?
+	</description>
+	<version>0.20</version>
+	<vendor>DreamScale, Inc.</vendor>
+	<depends>com.intellij.modules.platform</depends>
+	<depends>com.intellij.modules.lang</depends>
+
+
+	<!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
+	<idea-version since-build="107.105"/>
+
+	<!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
+		 on how to target different products -->
+	<!-- TODO: verify this is accurate; compile against a rubymine platform sdk and make sure everything works -->
+	<depends>com.intellij.modules.lang</depends>
+
+	<application-components>
+		<component>
+			<implementation-class>love.dreamscale.flow.intellij.IdeaFlowApplicationComponent</implementation-class>
+		</component>
+	</application-components>
+
+	<project-components>
+		<component>
+			<implementation-class>love.dreamscale.flow.intellij.IdeaFlowProjectComponent</implementation-class>
+		</component>
+	</project-components>
+
+	<actions>
+
+		<action id="love.dreamscale.flow.Pain" class="love.dreamscale.flow.intellij.action.event.CreatePainEvent" text="WTF?!"
+				description="Mark the start of confusion (unexpected observation)" icon="/icons/pain.png">
+			<!--<keyboard-shortcut keymap="$default" first-keystroke="meta shift p"/>-->
+		</action>
+		<action id="love.dreamscale.flow.Awesome" class="love.dreamscale.flow.intellij.action.event.CreateAwesomeEvent" text="YAY!"
+				description="Celebrate the success of solving the problem!" icon="/icons/awesome.png">
+			<!--<keyboard-shortcut keymap="$default" first-keystroke="meta shift a"/>-->
+		</action>
+
+		<action id="love.dreamscale.flow.FlushBatch" class="love.dreamscale.flow.intellij.action.event.FlushBatchEvent" text="Flush current batch"
+                description="Flushes the current batch of changes to the server">
+		</action>
+
+
+		<action id="love.dreamscale.flow.SwitchActive" class="love.dreamscale.flow.intellij.action.SwitchIdeaFlowComboBox"/>
+
+
+		<group id="love.dreamscale.flow.EditorPopupMenu">
+			<add-to-group group-id="EditorPopupMenu" anchor="last"/>
+			<add-to-group group-id="ConsoleEditorPopupMenu" anchor="last"/>
+			<separator/>
+			<reference ref="love.dreamscale.flow.Pain"/>
+			<reference ref="love.dreamscale.flow.Awesome"/>
+		</group>
+
+	</actions>
+
+	<extensions defaultExtensionNs="com.intellij">
+		<applicationService serviceImplementation="love.dreamscale.flow.intellij.settings.IdeaFlowSettings"/>
+		<applicationConfigurable instance="love.dreamscale.flow.intellij.settings.IdeaFlowSettingsPage"/>
+	</extensions>
+
+</idea-plugin>
