@@ -1,10 +1,10 @@
 package org.dreamscale.flow.activity
 
-
-import org.openmastery.publisher.api.activity.NewEditorActivity
-import org.openmastery.publisher.api.activity.NewExecutionActivity
-import org.openmastery.publisher.api.activity.NewModificationActivity
-import org.openmastery.time.MockTimeService
+import com.dreamscale.htmflow.api.activity.NewEditorActivity
+import com.dreamscale.htmflow.api.activity.NewExecutionActivity
+import com.dreamscale.htmflow.api.activity.NewModificationActivity
+import org.dreamscale.flow.controller.IFMController
+import org.dreamscale.time.MockTimeService
 import spock.lang.Ignore
 import spock.lang.Specification
 
@@ -15,7 +15,7 @@ class TestActivityHandler extends Specification {
 
     ActivityHandler handler
     InMemoryMessageLogger messageLogger
-    org.dreamscale.flow.controller.IFMController controller = Mock(org.dreamscale.flow.controller.IFMController)
+    IFMController controller = Mock(IFMController)
     MockTimeService timeService = new MockTimeService()
 
     void setup() {
@@ -23,7 +23,6 @@ class TestActivityHandler extends Specification {
         MessageQueue activityQueue = new MessageQueue(controller, messageLogger, timeService)
         handler = new ActivityHandler(controller, activityQueue, timeService)
 
-        controller.getActiveTask() >> new org.dreamscale.flow.state.TaskState(id: 1)
         controller.isRecording() >> true
     }
 
@@ -149,7 +148,6 @@ class TestActivityHandler extends Specification {
         handler.markProcessStarting(5, 3, "TestMyUnit", "JUnit", true)
         handler.markProcessEnding(3, -12)
         then:
-        assert getMessage(0, NewExecutionActivity).taskId == 5L
         assert getMessage(0, NewExecutionActivity).processName == "TestMyUnit"
         assert getMessage(0, NewExecutionActivity).executionTaskType == "JUnit"
         assert getMessage(0, NewExecutionActivity).exitCode == -12

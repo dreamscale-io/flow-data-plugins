@@ -52,7 +52,6 @@ public class IdeaFlowProjectComponent implements ProjectComponent {
         projectConnection = project.getMessageBus().connect();
         projectConnection.subscribe(FileEditorManagerListener.FILE_EDITOR_MANAGER, fileListener);
         projectConnection.subscribe(ExecutionManager.EXECUTION_TOPIC, processExecutionListener);
-
     }
 
     public void projectClosed() {

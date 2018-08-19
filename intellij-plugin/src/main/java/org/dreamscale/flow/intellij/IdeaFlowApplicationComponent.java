@@ -12,11 +12,8 @@ import org.dreamscale.flow.controller.IFMController;
 import org.dreamscale.flow.intellij.handler.DeactivationHandler;
 import org.dreamscale.flow.intellij.handler.VirtualFileActivityHandler;
 import org.dreamscale.flow.intellij.settings.IdeaFlowSettings;
-import org.dreamscale.flow.intellij.settings.IdeaFlowSettingsTaskManager;
-import org.dreamscale.flow.state.TaskState;
 
 import javax.swing.Icon;
-import java.util.List;
 
 public class IdeaFlowApplicationComponent extends ApplicationComponent.Adapter {
 
@@ -61,7 +58,6 @@ public class IdeaFlowApplicationComponent extends ApplicationComponent.Adapter {
     @Override
     public void initComponent() {
         controller = new IFMController(log);
-        controller.setPaused(true);
         virtualFileActivityHandler = new VirtualFileActivityHandler(controller.getActivityHandler());
 
         initIfmController(IdeaFlowSettings.getInstance());
@@ -85,13 +81,6 @@ public class IdeaFlowApplicationComponent extends ApplicationComponent.Adapter {
         } catch (Exception ex) {
             // TODO: this should be a message popup to the user
             log.error("Failed to initialize controller: " + ex.getMessage());
-        }
-
-        IdeaFlowSettingsTaskManager taskManager = IdeaFlowSettings.getInstance().getTaskManager();
-        List<TaskState> recentTasks = taskManager.getRecentTasks();
-        // TODO: should probably record the active task in settings and set it to that...
-        if (recentTasks.isEmpty() == false) {
-            controller.setActiveTask(recentTasks.get(0));
         }
     }
 

@@ -1,8 +1,7 @@
 package org.dreamscale.flow.activity;
 
 import org.dreamscale.flow.controller.IFMController;
-import org.dreamscale.flow.state.TaskState;
-import org.openmastery.time.TimeService;
+import org.dreamscale.time.TimeService;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -50,71 +49,53 @@ public class ActivityHandler {
         return activeFileActivity != null && activeFileActivity.getDurationInSeconds() >= SHORTEST_ACTIVITY;
     }
 
-    private Long getActiveTaskId() {
-        TaskState taskState = controller.getActiveTask();
-        return taskState != null ? taskState.getId() : null;
-    }
-
     public void markIdleTime(final Duration idleDuration) {
-        markIdleOrExternal(idleDuration, activeTaskId -> messageQueue.pushIdleActivity(activeTaskId, idleDuration.getSeconds()));
+        markIdleOrExternal(idleDuration, () -> messageQueue.pushIdleActivity(idleDuration.getSeconds()));
     }
 
     public void markExternalActivity(final Duration idleDuration, final String comment) {
         recentIdleDuration = idleDuration;
-        markIdleOrExternal(idleDuration, activeTaskId -> messageQueue.pushExternalActivity(activeTaskId, idleDuration.getSeconds(), comment));
+        markIdleOrExternal(idleDuration, () -> messageQueue.pushExternalActivity(idleDuration.getSeconds(), comment));
     }
 
-    private void markIdleOrExternal(Duration idleDuration, ActiveTaskBlock block) {
-        Long activeTaskId = getActiveTaskId();
-        if (activeTaskId == null) {
-            return;
-        }
-
+    private void markIdleOrExternal(Duration idleDuration, Runnable block) {
         if (idleDuration.getSeconds() >= SHORTEST_ACTIVITY) {
             if (activeFileActivity != null) {
                 long duration = activeFileActivity.getDurationInSeconds() - idleDuration.getSeconds();
                 if (duration > 0) {
                     LocalDateTime endTime = timeService.now().minusSeconds((int) idleDuration.getSeconds());
-                    messageQueue.pushEditorActivity(coalesce(activeFileActivity.taskId, activeTaskId),
-                                                    duration, endTime, activeFileActivity.filePath, activeFileActivity.modified);
+                    messageQueue.pushEditorActivity(duration, endTime, activeFileActivity.filePath, activeFileActivity.modified);
                 }
             }
-            block.execute(activeTaskId);
+            block.run();
             if (activeFileActivity != null) {
-                activeFileActivity = createFileActivity(activeTaskId, activeFileActivity.filePath);
+                activeFileActivity = createFileActivity(activeFileActivity.filePath);
             }
         }
     }
 
-    public void markProcessStarting(Long taskId, Long processId, String processName, String executionTaskType, boolean isDebug) {
-        ProcessActivity processActivity = new ProcessActivity(taskId, processName, executionTaskType, timeService, isDebug);
+    public void markProcessStarting(Long processId, String processName, String executionTaskType, boolean isDebug) {
+        ProcessActivity processActivity = new ProcessActivity(processName, executionTaskType, timeService, isDebug);
         activeProcessMap.put(processId, processActivity);
         //TODO this will leak memory if the processes started are never closed
     }
 
     public void markProcessEnding(Long processId, int exitCode) {
         ProcessActivity processActivity = activeProcessMap.remove(processId);
-        Long activeTaskId = getActiveTaskId();
-        if (processActivity != null && activeTaskId != null) {
-            messageQueue.pushExecutionActivity(coalesce(processActivity.taskId, activeTaskId), processActivity.getDurationInSeconds(),
+        if (processActivity != null) {
+            messageQueue.pushExecutionActivity(processActivity.getDurationInSeconds(),
                                                processActivity.processName, exitCode, processActivity.executionTaskType, processActivity.isDebug);
         }
     }
 
     public void startFileEvent(String filePath) {
-        Long activeTaskId = getActiveTaskId();
-        if (activeTaskId == null) {
-            return;
-        }
-
         if (isDifferent(filePath)) {
             if (isOverActivityThreshold()) {
-                messageQueue.pushEditorActivity(coalesce(activeFileActivity.taskId, activeTaskId),
-                                                activeFileActivity.getDurationInSeconds(),
+                messageQueue.pushEditorActivity(activeFileActivity.getDurationInSeconds(),
                                                 activeFileActivity.filePath, activeFileActivity.modified);
             }
 
-            activeFileActivity = createFileActivity(activeTaskId, filePath);
+            activeFileActivity = createFileActivity(filePath);
         }
     }
 
@@ -134,36 +115,24 @@ public class ActivityHandler {
     public void pushModificationActivity(Long intervalInSeconds) {
         int modCount = modificationCount.getAndSet(0);
         if (modCount > 0) {
-            messageQueue.pushModificationActivity(getActiveTaskId(), intervalInSeconds, modCount);
+            messageQueue.pushModificationActivity(intervalInSeconds, modCount);
         }
     }
 
-    private FileActivity createFileActivity(Long taskId, String filePath) {
-        return filePath == null ? null : new FileActivity(taskId, filePath, timeService, false);
+    private FileActivity createFileActivity(String filePath) {
+        return filePath == null ? null : new FileActivity(filePath, timeService, false);
     }
 
-    private Long coalesce(Long primary, Long secondary) {
-        return primary != null ? primary : secondary;
-    }
-
-
-    private interface ActiveTaskBlock {
-
-        void execute(Long activeTaskId);
-
-    }
 
     private static class ProcessActivity {
 
-        private Long taskId;
         private TimeService timeService;
         private LocalDateTime timeStarted;
         private String processName;
         private String executionTaskType;
         private boolean isDebug;
 
-        public ProcessActivity(Long taskId, String processName, String executionTaskType, TimeService timeService, boolean isDebug) {
-            this.taskId = taskId;
+        public ProcessActivity(String processName, String executionTaskType, TimeService timeService, boolean isDebug) {
             this.processName = processName;
             this.executionTaskType = executionTaskType;
             this.timeService = timeService;
@@ -176,21 +145,19 @@ public class ActivityHandler {
         }
 
         public String toString() {
-            return "ProcessActivity [taskId=" + taskId + ", processName=" + processName + ", executionTaskType=" +
+            return "ProcessActivity [processName=" + processName + ", executionTaskType=" +
                     executionTaskType + ", " + "duration=" + getDurationInSeconds() + ", isDebug=" + isDebug + "]";
         }
     }
 
     private static class FileActivity {
 
-        private Long taskId;
         private LocalDateTime time;
         private TimeService timeService;
         private String filePath;
         private boolean modified;
 
-        public FileActivity(Long taskId, String filePath, TimeService timeService, boolean modified) {
-            this.taskId = taskId;
+        public FileActivity(String filePath, TimeService timeService, boolean modified) {
             this.filePath = filePath;
             this.timeService = timeService;
             this.time = timeService.now();
@@ -202,7 +169,7 @@ public class ActivityHandler {
         }
 
         public String toString() {
-            return "FileActivity [taskId=" + taskId + ", path=" + filePath + ", modified=" + modified + ", duration=" + getDurationInSeconds() + "]";
+            return "FileActivity [path=" + filePath + ", modified=" + modified + ", duration=" + getDurationInSeconds() + "]";
         }
     }
 

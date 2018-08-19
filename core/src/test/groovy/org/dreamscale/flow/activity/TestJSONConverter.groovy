@@ -1,7 +1,7 @@
 package org.dreamscale.flow.activity
 
-import org.openmastery.publisher.api.activity.NewEditorActivity
-import org.openmastery.publisher.api.batch.NewBatchEvent
+import com.dreamscale.htmflow.api.activity.NewEditorActivity
+import com.dreamscale.htmflow.api.batch.NewBatchEvent
 import spock.lang.Specification
 
 import java.time.LocalDateTime
@@ -13,12 +13,11 @@ class TestJSONConverter extends Specification {
     def "toJSON/fromJSON SHOULD serialize/deserialize API types"() {
         given:
         NewEditorActivity editorActivity = NewEditorActivity.builder()
-                .taskId(1)
                 .endTime(LocalDateTime.now())
                 .durationInSeconds(5)
                 .filePath("hello.txt")
                 .isModified(true)
-                .build();
+                .build()
 
         when:
         String json = converter.toJSON(editorActivity)
@@ -32,7 +31,7 @@ class TestJSONConverter extends Specification {
         given:
         NewBatchEvent event = NewBatchEvent.builder()
                 .comment("This is a comment about an == sign that I screwed up")
-                .build();
+                .build()
 
         when:
         String json = converter.toJSON(event)

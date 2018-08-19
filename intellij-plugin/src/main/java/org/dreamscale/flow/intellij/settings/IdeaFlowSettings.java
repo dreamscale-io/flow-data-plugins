@@ -17,22 +17,6 @@ public class IdeaFlowSettings implements PersistentStateComponent<IdeaFlowSettin
 
     private String apiUrl = "http://ideaflowdx.openmastery.org";
     private String apiKey;
-    private int recentTaskListSize = 5;
-    private String taskListJsonString;
-    @Transient
-    private IdeaFlowSettingsTaskManager taskManager = new IdeaFlowSettingsTaskManager(this);
-
-    public String getTaskListJsonString() {
-        return taskListJsonString;
-    }
-
-    public void setTaskListJsonString(String taskListJsonString) {
-        this.taskListJsonString = taskListJsonString;
-    }
-
-    public IdeaFlowSettingsTaskManager getTaskManager() {
-        return taskManager;
-    }
 
     public String getApiUrl() {
         return apiUrl;
@@ -48,14 +32,6 @@ public class IdeaFlowSettings implements PersistentStateComponent<IdeaFlowSettin
 
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
-    }
-
-    public int getRecentTaskListSize() {
-        return recentTaskListSize;
-    }
-
-    public void setRecentTaskListSize(int recentTaskListSize) {
-        this.recentTaskListSize = recentTaskListSize;
     }
 
     @Override

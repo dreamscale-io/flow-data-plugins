@@ -10,7 +10,7 @@ class InMemoryMessageLogger implements MessageLogger {
     }
 
     @Override
-    void writeMessage(Long taskId, Object message) {
+    void writeMessage(Object message) {
         messages.add(message)
     }
 

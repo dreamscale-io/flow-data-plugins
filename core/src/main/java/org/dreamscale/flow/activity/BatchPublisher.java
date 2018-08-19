@@ -1,18 +1,17 @@
 package org.dreamscale.flow.activity;
 
-import com.bancvue.rest.exception.NotFoundException;
+import com.dreamscale.htmflow.api.activity.NewEditorActivity;
+import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
+import com.dreamscale.htmflow.api.activity.NewExternalActivity;
+import com.dreamscale.htmflow.api.activity.NewIdleActivity;
+import com.dreamscale.htmflow.api.activity.NewModificationActivity;
+import com.dreamscale.htmflow.api.batch.NewBatchEvent;
+import com.dreamscale.htmflow.api.batch.NewIFMBatch;
+import com.dreamscale.htmflow.api.event.NewSnippetEvent;
+import com.dreamscale.htmflow.client.BatchClient;
+import org.dreamscale.exception.NotFoundException;
 import org.dreamscale.flow.Logger;
-import org.openmastery.publisher.api.activity.NewBlockActivity;
-import org.openmastery.publisher.api.activity.NewEditorActivity;
-import org.openmastery.publisher.api.activity.NewExecutionActivity;
-import org.openmastery.publisher.api.activity.NewExternalActivity;
-import org.openmastery.publisher.api.activity.NewIdleActivity;
-import org.openmastery.publisher.api.activity.NewModificationActivity;
-import org.openmastery.publisher.api.batch.NewBatchEvent;
-import org.openmastery.publisher.api.batch.NewIFMBatch;
-import org.openmastery.publisher.api.event.NewSnippetEvent;
-import org.openmastery.publisher.client.BatchClient;
-import org.openmastery.time.TimeService;
+import org.dreamscale.time.TimeService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -47,7 +46,7 @@ public class BatchPublisher implements Runnable {
     private Map<File, Integer> failedFileToLastDayRetriedMap = new LinkedHashMap<>();
     private AtomicReference<BatchClient> batchClientReference = new AtomicReference<>();
     private Logger logger;
-    private File activeDir;
+    private File activeFile;
     private File publishDir;
     private File failedDir;
     private File retryNextSessionDir;
@@ -57,13 +56,13 @@ public class BatchPublisher implements Runnable {
     public BatchPublisher(File baseDir, Logger logger, TimeService timeService) {
         this.logger = logger;
         this.timeService = timeService;
-        this.activeDir = createDir(baseDir, "active");
+        this.activeFile = new File(baseDir, "active.log");
         this.publishDir = createDir(baseDir, "publish");
         this.failedDir = createDir(baseDir, "failed");
         this.retryNextSessionDir = createDir(baseDir, "retryNextSession");
         this.publishingLock = new PublishingLock(logger, baseDir);
 
-        commitActiveFiles();
+        commitActiveFile();
     }
 
     private File createDir(File baseDir, String name) {
@@ -72,8 +71,8 @@ public class BatchPublisher implements Runnable {
         return dir;
     }
 
-    public File createActiveFile(String name) {
-        return new File(activeDir, name);
+    public File getActiveFile() {
+        return activeFile;
     }
 
     public void flush() {
@@ -123,12 +122,10 @@ public class BatchPublisher implements Runnable {
         }
     }
 
-    public void commitActiveFiles() {
+    public void commitActiveFile() {
         final String dateTime = DATE_TIME_FORMATTER.format(timeService.now());
-        File[] files = activeDir.listFiles();
-
-        for (int i = 0; i < files.length; i++) {
-            moveFileToDirAndRename(files[i], publishDir, dateTime + "_" + i);
+        if (activeFile.exists()) {
+            moveFileToDirAndRename(activeFile, publishDir, dateTime);
         }
     }
 
@@ -229,8 +226,6 @@ public class BatchPublisher implements Runnable {
             builder.executionActivity((NewExecutionActivity) object);
         } else if (object instanceof NewModificationActivity) {
             builder.modificationActivity((NewModificationActivity) object);
-        } else if (object instanceof NewBlockActivity) {
-            builder.blockActivity((NewBlockActivity) object);
         } else if (object instanceof NewBatchEvent) {
             builder.event((NewBatchEvent) object);
         } else if (object instanceof NewSnippetEvent) {
@@ -308,4 +303,5 @@ public class BatchPublisher implements Runnable {
         }
 
     }
+
 }

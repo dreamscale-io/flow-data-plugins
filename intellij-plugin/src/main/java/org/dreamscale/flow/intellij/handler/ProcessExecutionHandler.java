@@ -15,23 +15,20 @@ import java.util.Map;
 
 public class ProcessExecutionHandler {
 
-    private IFMController controller;
     private ActivityHandler activityHandler;
     private Map<ProcessHandler, ExitCodeListener> processDecodingMap = new HashMap<ProcessHandler, ExitCodeListener>();
 
     public ProcessExecutionHandler(IFMController controller) {
-        this.controller = controller;
         this.activityHandler = controller.getActivityHandler();
     }
 
     public void processStarting(String executorId, ExecutionEnvironment env) {
-        Long taskId = controller.getActiveTaskId();
         String processName = env.getRunProfile().getName();
         Long processId = env.getExecutionId();
         String executionTaskType = getExecutionTaskType(env);
         boolean isDebug = executorId.equals("Debug");
 
-        activityHandler.markProcessStarting(taskId, processId, processName, executionTaskType, isDebug);
+        activityHandler.markProcessStarting(processId, processName, executionTaskType, isDebug);
     }
 
     private String getExecutionTaskType(ExecutionEnvironment env) {

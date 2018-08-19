@@ -5,8 +5,7 @@ import com.intellij.openapi.ui.Messages;
 import org.dreamscale.flow.activity.ActivityHandler;
 import org.dreamscale.flow.controller.IFMController;
 import org.dreamscale.flow.intellij.IdeaFlowApplicationComponent;
-import org.dreamscale.flow.state.TimeConverter;
-import org.joda.time.DateTime;
+import org.dreamscale.time.TimeConverter;
 
 import java.time.Duration;
 
@@ -17,13 +16,11 @@ public class DeactivationHandler {
     private static final Duration DEACTIVATION_THRESHOLD = Duration.ofMinutes(50);
     private static final Duration AUTO_IDLE_THRESHOLD = Duration.ofHours(8);
 
-    private IFMController controller;
     private ActivityHandler activityHandler;
-    private DateTime deactivatedAt;
+    private Long deactivatedAt;
     private boolean promptingForIdleTime;
 
     public DeactivationHandler(IFMController controller) {
-        this.controller = controller;
         this.activityHandler = controller.getActivityHandler();
     }
 
@@ -32,16 +29,12 @@ public class DeactivationHandler {
     }
 
     public void deactivated() {
-        deactivatedAt = DateTime.now();
+        deactivatedAt = System.currentTimeMillis();
     }
 
     public void markActiveFileEventAsIdleIfDeactivationThresholdExceeded(Project project) {
-        if (controller.isRecording() == false) {
-            deactivatedAt = null;
-        }
-
         Duration deactivationDuration = getDeactivationDuration();
-        if (!controller.isTaskActive() || (deactivationDuration == null)) {
+        if (deactivationDuration == null) {
             return;
         }
 
@@ -70,7 +63,7 @@ public class DeactivationHandler {
         Duration deactivationDuration = null;
 
         if (deactivatedAt != null) {
-            long deactivationLength = DateTime.now().getMillis() - deactivatedAt.getMillis();
+            long deactivationLength = System.currentTimeMillis() - deactivatedAt;
             deactivationDuration = Duration.ofMillis(deactivationLength);
         }
         return deactivationDuration;
@@ -79,12 +72,7 @@ public class DeactivationHandler {
     private boolean wasDeactivationIdleTime(Project project, Duration deactivationDuration) {
         String formattedPeriod = TimeConverter.toFormattedDuration(deactivationDuration);
         StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append("Were you working ");
-        String activeTaskName = controller.getActiveTaskName();
-        if (activeTaskName != null) {
-            messageBuilder.append("on ").append(activeTaskName).append(" ");
-        }
-        messageBuilder.append("during the last " + formattedPeriod + "?");
+        messageBuilder.append("Were you working during the last " + formattedPeriod + "?");
         int result = Messages.showYesNoDialog(project, messageBuilder.toString(), IDLE_TITLE, null);
         return result != 0;
     }

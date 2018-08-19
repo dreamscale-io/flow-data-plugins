@@ -1,15 +1,14 @@
 package org.dreamscale.flow.activity;
 
-import org.dreamscale.flow.controller.IFMController;
-import org.openmastery.publisher.api.activity.NewEditorActivity;
-import org.openmastery.publisher.api.activity.NewExecutionActivity;
-import org.openmastery.publisher.api.activity.NewExternalActivity;
-import org.openmastery.publisher.api.activity.NewIdleActivity;
-import org.openmastery.publisher.api.activity.NewModificationActivity;
-import org.openmastery.publisher.api.batch.NewBatchEvent;
-import org.openmastery.publisher.api.event.EventType;
-import org.openmastery.publisher.api.event.NewSnippetEvent;
-import org.openmastery.time.TimeService;
+import com.dreamscale.htmflow.api.activity.NewEditorActivity;
+import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
+import com.dreamscale.htmflow.api.activity.NewExternalActivity;
+import com.dreamscale.htmflow.api.activity.NewIdleActivity;
+import com.dreamscale.htmflow.api.activity.NewModificationActivity;
+import com.dreamscale.htmflow.api.batch.NewBatchEvent;
+import com.dreamscale.htmflow.api.event.EventType;
+import com.dreamscale.htmflow.api.event.NewSnippetEvent;
+import org.dreamscale.time.TimeService;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -22,16 +21,14 @@ import java.util.Map;
 
 public class MessageQueue {
 
-    private IFMController controller;
     private MessageLogger messageLogger;
     private TimeService timeService;
 
-    public MessageQueue(IFMController controller, BatchPublisher batchPublisher, TimeService timeService) {
-        this(controller, new FileMessageLogger(batchPublisher, timeService), timeService);
+    public MessageQueue(BatchPublisher batchPublisher, TimeService timeService) {
+        this(new FileMessageLogger(batchPublisher, timeService), timeService);
     }
 
-    public MessageQueue(IFMController controller, MessageLogger messageLogger, TimeService timeService) {
-        this.controller = controller;
+    public MessageQueue(MessageLogger messageLogger, TimeService timeService) {
         this.messageLogger = messageLogger;
         this.timeService = timeService;
     }
@@ -40,51 +37,36 @@ public class MessageQueue {
         messageLogger.flush();
     }
 
-    public void pushEditorActivity(Long taskId, Long durationInSeconds, String filePath, boolean isModified) {
-        pushEditorActivity(taskId, durationInSeconds, timeService.now(), filePath, isModified);
+    public void pushEditorActivity(Long durationInSeconds, String filePath, boolean isModified) {
+        pushEditorActivity(durationInSeconds, timeService.now(), filePath, isModified);
     }
 
-    public void pushEditorActivity(Long taskId, Long durationInSeconds, LocalDateTime endTime, String filePath, boolean isModified) {
-        if (isDisabled()) {
-            return;
-        }
-
+    public void pushEditorActivity(Long durationInSeconds, LocalDateTime endTime, String filePath, boolean isModified) {
         NewEditorActivity activity = NewEditorActivity.builder()
-                .taskId(taskId)
                 .endTime(endTime)
                 .durationInSeconds(durationInSeconds)
                 .filePath(filePath)
                 .isModified(isModified)
                 .build();
 
-        messageLogger.writeMessage(taskId, activity);
+        messageLogger.writeMessage(activity);
     }
 
-    public void pushModificationActivity(Long taskId, Long durationInSeconds, int modificationCount) {
-        if (isDisabled()) {
-            return;
-        }
-
+    public void pushModificationActivity(Long durationInSeconds, int modificationCount) {
         NewModificationActivity activity = NewModificationActivity.builder()
-                .taskId(taskId)
                 .endTime(timeService.now())
                 .durationInSeconds(durationInSeconds)
                 .modificationCount(modificationCount)
                 .build();
 
-        messageLogger.writeMessage(taskId, activity);
+        messageLogger.writeMessage(activity);
     }
 
-    public void pushExecutionActivity(Long taskId, Long durationInSeconds, String processName,
+    public void pushExecutionActivity(Long durationInSeconds, String processName,
                                       int exitCode,
                                       String executionTaskType,
                                       boolean isDebug) {
-        if (isDisabled()) {
-            return;
-        }
-
         NewExecutionActivity activity = NewExecutionActivity.builder()
-                .taskId(taskId)
                 .durationInSeconds(durationInSeconds)
                 .endTime(timeService.now())
                 .processName(processName)
@@ -93,60 +75,40 @@ public class MessageQueue {
                 .isDebug(isDebug)
                 .build();
 
-        messageLogger.writeMessage(taskId, activity);
+        messageLogger.writeMessage(activity);
     }
 
-    public void pushIdleActivity(Long taskId, Long durationInSeconds) {
-        if (isDisabled()) {
-            return;
-        }
-
+    public void pushIdleActivity(Long durationInSeconds) {
         NewIdleActivity activity = NewIdleActivity.builder()
-                .taskId(taskId)
                 .endTime(timeService.now())
                 .durationInSeconds(durationInSeconds)
                 .build();
 
-        messageLogger.writeMessage(taskId, activity);
+        messageLogger.writeMessage(activity);
     }
 
-    public void pushExternalActivity(Long taskId, Long durationInSeconds, String comment) {
-        if (isDisabled()) {
-            return;
-        }
-
+    public void pushExternalActivity(Long durationInSeconds, String comment) {
         NewExternalActivity activity = NewExternalActivity.builder()
-                .taskId(taskId)
                 .endTime(timeService.now())
                 .durationInSeconds(durationInSeconds)
                 .comment(comment)
                 .build();
 
-        messageLogger.writeMessage(taskId, activity);
+        messageLogger.writeMessage(activity);
     }
 
-    public void pushEvent(Long taskId, EventType eventType, String message) {
-        if (isDisabled()) {
-            return;
-        }
-
+    public void pushEvent(EventType eventType, String message) {
         NewBatchEvent batchEvent = NewBatchEvent.builder()
-                .taskId(taskId)
                 .position(timeService.now())
                 .type(eventType)
                 .comment(message)
                 .build();
 
-        messageLogger.writeMessage(taskId, batchEvent);
+        messageLogger.writeMessage(batchEvent);
     }
 
-    public void pushSnippet(Long taskId, EventType eventType, String message, String source, String snippet) {
-        if (isDisabled()) {
-            return;
-        }
-
+    public void pushSnippet(EventType eventType, String message, String source, String snippet) {
         NewSnippetEvent batchEvent = NewSnippetEvent.builder()
-                .taskId(taskId)
                 .position(timeService.now())
                 .eventType(eventType)
                 .comment(message)
@@ -154,12 +116,7 @@ public class MessageQueue {
                 .snippet(snippet)
                 .build();
 
-        messageLogger.writeMessage(taskId, batchEvent);
-    }
-
-
-    private boolean isDisabled() {
-        return controller.isRecording() == false;
+        messageLogger.writeMessage(batchEvent);
     }
 
 
@@ -188,7 +145,7 @@ public class MessageQueue {
             startNewBatch();
         }
 
-        public void writeMessage(Long taskId, Object message) {
+        public void writeMessage(Object message) {
             try {
                 String messageAsJson = jsonConverter.toJSON(message);
 
@@ -196,7 +153,7 @@ public class MessageQueue {
                     if (isBatchThresholdReached()) {
                         startNewBatch();
                     }
-                    File file = getFileForTask(taskId);
+                    File file = batchPublisher.getActiveFile();
                     appendLineToFile(file, messageAsJson);
                     messageCount++;
                 }
@@ -219,7 +176,7 @@ public class MessageQueue {
 
         private void startNewBatch() {
             synchronized (lock) {
-                batchPublisher.commitActiveFiles();
+                batchPublisher.commitActiveFile();
                 activeMessageFiles.clear();
 
                 lastBatchTime = timeService.now();
@@ -227,16 +184,6 @@ public class MessageQueue {
             }
         }
 
-        private File getFileForTask(Long taskId) {
-            synchronized (lock) {
-                File file = activeMessageFiles.get(taskId);
-                if (file == null) {
-                    file = batchPublisher.createActiveFile(taskId + ".log");
-                    activeMessageFiles.put(taskId, file);
-                }
-                return file;
-            }
-        }
     }
 
 }

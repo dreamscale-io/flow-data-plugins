@@ -1,12 +1,13 @@
 package org.dreamscale.flow.activity
 
-import com.bancvue.rest.exception.NotFoundException
-import org.openmastery.publisher.api.activity.NewEditorActivity
-import org.openmastery.publisher.api.batch.NewBatchEvent
-import org.openmastery.publisher.api.batch.NewIFMBatch
-import org.openmastery.publisher.api.event.EventType
-import org.openmastery.publisher.client.BatchClient
-import org.openmastery.time.MockTimeService
+import com.dreamscale.htmflow.api.activity.NewEditorActivity
+import com.dreamscale.htmflow.api.batch.NewBatchEvent
+import com.dreamscale.htmflow.api.batch.NewIFMBatch
+import com.dreamscale.htmflow.api.event.EventType
+import com.dreamscale.htmflow.client.BatchClient
+import org.dreamscale.exception.NotFoundException
+import org.dreamscale.flow.Logger
+import org.dreamscale.time.MockTimeService
 import spock.lang.Specification
 
 import java.time.LocalDateTime
@@ -25,7 +26,7 @@ class TestBatchPublisher extends Specification {
         tempDir.deleteDir()
         tempDir.mkdirs()
 
-        org.dreamscale.flow.Logger logger = Mock(org.dreamscale.flow.Logger)
+        Logger logger = Mock(Logger)
         batchPublisher = new BatchPublisher(tempDir, logger, timeService)
 
         mockBatchClient = Mock(BatchClient)
@@ -43,11 +44,11 @@ class TestBatchPublisher extends Specification {
 
     def "commitBatch SHOULD create stuff to publish"() {
         given:
-        File tmpFile = batchPublisher.createActiveFile("message")
+        File tmpFile = batchPublisher.getActiveFile()
         tmpFile << "some stuff"
 
         when:
-        batchPublisher.commitActiveFiles()
+        batchPublisher.commitActiveFile()
 
         then:
         assert batchPublisher.hasSomethingToPublish()
@@ -55,7 +56,6 @@ class TestBatchPublisher extends Specification {
 
     private NewEditorActivity createEditorActivity() {
         NewEditorActivity.builder()
-                .taskId(1)
                 .endTime(LocalDateTime.now())
                 .durationInSeconds(5)
                 .filePath("hello.txt")
@@ -65,7 +65,7 @@ class TestBatchPublisher extends Specification {
 
     private File createBatchFile() {
         NewEditorActivity editorActivity = createEditorActivity()
-        File tmpFile = batchPublisher.createActiveFile("file")
+        File tmpFile = batchPublisher.getActiveFile()
         tmpFile << jsonConverter.toJSON(editorActivity) + "\n"
         tmpFile
     }
@@ -83,12 +83,10 @@ class TestBatchPublisher extends Specification {
     }
 
     def "convertBatchFileToObject SHOULD support events "() {
-
         given:
         NewBatchEvent batchEvent = NewBatchEvent.builder()
-                .taskId(1)
                 .position(LocalDateTime.now())
-                .type(EventType.AWESOME)
+                .type(EventType.NOTE)
                 .comment("hello!")
                 .build();
 
@@ -109,7 +107,7 @@ class TestBatchPublisher extends Specification {
         createBatchFile()
 
         when:
-        batchPublisher.commitActiveFiles()
+        batchPublisher.commitActiveFile()
         batchPublisher.publishBatches()
 
         then:
@@ -119,11 +117,11 @@ class TestBatchPublisher extends Specification {
 
     def "publishBatches SHOULD mark file as failed if parsing fails"() {
         given:
-        File file = batchPublisher.createActiveFile("file")
+        File file = batchPublisher.getActiveFile()
         file << "illegal json"
 
         when:
-        batchPublisher.commitActiveFiles()
+        batchPublisher.commitActiveFile()
         batchPublisher.publishBatches()
 
         then:
@@ -137,7 +135,7 @@ class TestBatchPublisher extends Specification {
         mockBatchClient.addIFMBatch(_) >> { throw new RuntimeException("Publication Failure") }
 
         when:
-        batchPublisher.commitActiveFiles()
+        batchPublisher.commitActiveFile()
         batchPublisher.publishBatches()
 
         then:
@@ -151,7 +149,7 @@ class TestBatchPublisher extends Specification {
         mockBatchClient.addIFMBatch(_) >> { throw new NotFoundException("task not found") }
 
         when:
-        batchPublisher.commitActiveFiles()
+        batchPublisher.commitActiveFile()
         batchPublisher.publishBatches()
 
         then:
@@ -177,7 +175,7 @@ class TestBatchPublisher extends Specification {
         }
 
         when:
-        batchPublisher.commitActiveFiles()
+        batchPublisher.commitActiveFile()
         batchPublisher.publishBatches()
 
         then:

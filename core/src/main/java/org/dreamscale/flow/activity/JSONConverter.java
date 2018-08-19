@@ -1,16 +1,16 @@
 package org.dreamscale.flow.activity;
 
-import com.bancvue.rest.config.ObjectMapperContextResolver;
+import com.dreamscale.htmflow.api.activity.NewEditorActivity;
+import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
+import com.dreamscale.htmflow.api.activity.NewExternalActivity;
+import com.dreamscale.htmflow.api.activity.NewIdleActivity;
+import com.dreamscale.htmflow.api.activity.NewModificationActivity;
+import com.dreamscale.htmflow.api.batch.NewBatchEvent;
+import com.dreamscale.htmflow.api.event.NewSnippetEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.openmastery.publisher.api.activity.NewBlockActivity;
-import org.openmastery.publisher.api.activity.NewEditorActivity;
-import org.openmastery.publisher.api.activity.NewExecutionActivity;
-import org.openmastery.publisher.api.activity.NewExternalActivity;
-import org.openmastery.publisher.api.activity.NewIdleActivity;
-import org.openmastery.publisher.api.activity.NewModificationActivity;
-import org.openmastery.publisher.api.batch.NewBatchEvent;
-import org.openmastery.publisher.api.event.NewSnippetEvent;
+import org.dreamscale.jackson.ObjectMapperBuilder;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -25,7 +25,10 @@ public class JSONConverter {
     ObjectMapper mapper;
 
     JSONConverter() {
-        mapper = new ObjectMapperContextResolver().getContext(null);
+        mapper = new ObjectMapperBuilder()
+                .jsr310TimeModule()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
     }
 
     private Map<String, Class> createIdToClassMap() {
@@ -35,7 +38,6 @@ public class JSONConverter {
         idToClassMap.put("ExternalActivity", NewExternalActivity.class);
         idToClassMap.put("ModificationActivity", NewModificationActivity.class);
         idToClassMap.put("IdleActivity", NewIdleActivity.class);
-        idToClassMap.put("BlockActivity", NewBlockActivity.class);
         idToClassMap.put("Event", NewBatchEvent.class);
         idToClassMap.put("SnippetEvent", NewSnippetEvent.class);
         return idToClassMap;
