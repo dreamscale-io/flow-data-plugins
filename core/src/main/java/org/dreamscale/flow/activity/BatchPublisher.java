@@ -8,7 +8,7 @@ import com.dreamscale.htmflow.api.activity.NewModificationActivity;
 import com.dreamscale.htmflow.api.batch.NewBatchEvent;
 import com.dreamscale.htmflow.api.batch.NewIFMBatch;
 import com.dreamscale.htmflow.api.event.NewSnippetEvent;
-import com.dreamscale.htmflow.client.BatchClient;
+import com.dreamscale.htmflow.client.FlowClient;
 import org.dreamscale.exception.NotFoundException;
 import org.dreamscale.flow.Logger;
 import org.dreamscale.time.TimeService;
@@ -44,7 +44,7 @@ public class BatchPublisher implements Runnable {
     private AtomicReference<Thread> runThreadHolder = new AtomicReference<>();
     private JSONConverter jsonConverter = new JSONConverter();
     private Map<File, Integer> failedFileToLastDayRetriedMap = new LinkedHashMap<>();
-    private AtomicReference<BatchClient> batchClientReference = new AtomicReference<>();
+    private AtomicReference<FlowClient> flowClientReference = new AtomicReference<>();
     private Logger logger;
     private File activeFile;
     private File publishDir;
@@ -61,8 +61,6 @@ public class BatchPublisher implements Runnable {
         this.failedDir = createDir(baseDir, "failed");
         this.retryNextSessionDir = createDir(baseDir, "retryNextSession");
         this.publishingLock = new PublishingLock(logger, baseDir);
-
-        commitActiveFile();
     }
 
     private File createDir(File baseDir, String name) {
@@ -82,8 +80,10 @@ public class BatchPublisher implements Runnable {
         }
     }
 
-    public void setBatchClient(BatchClient activityClient) {
-        batchClientReference.set(activityClient);
+    public void start(FlowClient activityClient) {
+        flowClientReference.set(activityClient);
+
+        commitActiveFile();
 
         for (File fileToRetry : retryNextSessionDir.listFiles()) {
             moveFileToDir(fileToRetry, publishDir);
@@ -193,7 +193,7 @@ public class BatchPublisher implements Runnable {
     }
 
     private void publishBatch(NewIFMBatch batch) {
-        BatchClient batchClient = batchClientReference.get();
+        FlowClient batchClient = flowClientReference.get();
         if (batchClient == null) {
             throw new ServerUnavailableException("BatchClient is unavailable");
         }

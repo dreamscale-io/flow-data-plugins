@@ -32,16 +32,6 @@
 	</project-components>
 
 	<actions>
-
-		<action id="org.dreamscale.flow.Pain" class="org.dreamscale.flow.intellij.action.event.CreatePainEvent" text="WTF?!"
-                description="Mark the start of confusion (unexpected observation)" icon="/icons/pain.png">
-			<!--<keyboard-shortcut keymap="$default" first-keystroke="meta shift p"/>-->
-		</action>
-		<action id="org.dreamscale.flow.Awesome" class="org.dreamscale.flow.intellij.action.event.CreateAwesomeEvent" text="YAY!"
-                description="Celebrate the success of solving the problem!" icon="/icons/awesome.png">
-			<!--<keyboard-shortcut keymap="$default" first-keystroke="meta shift a"/>-->
-		</action>
-
 		<action id="org.dreamscale.flow.FlushBatch" class="org.dreamscale.flow.intellij.action.event.FlushBatchEvent" text="Flush current batch"
                 description="Flushes the current batch of changes to the server">
 		</action>

@@ -20,10 +20,10 @@ class TestActivityHandler extends Specification {
 
     void setup() {
         messageLogger = new InMemoryMessageLogger()
-        MessageQueue activityQueue = new MessageQueue(controller, messageLogger, timeService)
+        MessageQueue activityQueue = new MessageQueue(messageLogger, timeService)
         handler = new ActivityHandler(controller, activityQueue, timeService)
 
-        controller.isRecording() >> true
+        controller.isActive() >> true
     }
 
     void testStartEvent_ShouldNotCreateEditorActivity_IfNoPriorEvent() {
@@ -145,7 +145,7 @@ class TestActivityHandler extends Specification {
 
     void testMarkProcessExecution_ShouldPublishActivity_AfterStartStop() {
         when:
-        handler.markProcessStarting(5, 3, "TestMyUnit", "JUnit", true)
+        handler.markProcessStarting(3, "TestMyUnit", "JUnit", true)
         handler.markProcessEnding(3, -12)
         then:
         assert getMessage(0, NewExecutionActivity).processName == "TestMyUnit"

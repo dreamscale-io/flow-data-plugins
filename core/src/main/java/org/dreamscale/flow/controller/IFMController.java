@@ -1,9 +1,9 @@
 package org.dreamscale.flow.controller;
 
 import com.dreamscale.htmflow.api.event.EventType;
-import com.dreamscale.htmflow.client.BatchClient;
+import com.dreamscale.htmflow.client.FlowClient;
 import feign.Request;
-import org.dreamscale.feign.JacksonFeignBuilder;
+import org.dreamscale.feign.DefaultFeignConfig;
 import org.dreamscale.flow.Logger;
 import org.dreamscale.flow.activity.ActivityHandler;
 import org.dreamscale.flow.activity.BatchPublisher;
@@ -11,42 +11,40 @@ import org.dreamscale.flow.activity.MessageQueue;
 import org.dreamscale.time.LocalDateTimeService;
 
 import java.io.File;
-import java.time.Duration;
+import java.nio.file.Files;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class IFMController {
 
-    private boolean paused = true;
+    private static final String API_URL = "http://localhost:8080";
+//    private static final String API_URL = "http://htmflow.dreamscale.io";
+
+    private AtomicBoolean active = new AtomicBoolean(false);
     private ActivityHandler activityHandler;
     private MessageQueue messageQueue;
     private BatchPublisher batchPublisher;
+    private PushModificationActivityTimer pushModificationActivityTimer;
 
     public IFMController(Logger logger) {
-        File ideaFlowDir = createIdeaFlowDir();
+        File ideaFlowDir = createFlowPluginDir();
         LocalDateTimeService timeService = new LocalDateTimeService();
         batchPublisher = new BatchPublisher(ideaFlowDir, logger, timeService);
         messageQueue = new MessageQueue(batchPublisher, timeService);
         activityHandler = new ActivityHandler(this, messageQueue, timeService);
-        startPushModificationActivityTimer(30);
+        pushModificationActivityTimer = new PushModificationActivityTimer(activityHandler, 30);
     }
 
-    private File createIdeaFlowDir() {
-        File ideaFlowDir = new File(System.getProperty("user.home") + File.separator + ".ideaflow");
-        ideaFlowDir.mkdirs();
-        return ideaFlowDir;
+    private File getFlowDir() {
+        return new File(System.getProperty("user.home"), ".flow");
     }
 
-    private void startPushModificationActivityTimer(final long intervalInSeconds) {
-        TimerTask timerTask = new TimerTask() {
-            @Override
-            public void run() {
-                getActivityHandler().pushModificationActivity(intervalInSeconds);
-            }
-        };
-
-        long intervalInMillis = intervalInSeconds * 1000;
-        new Timer().scheduleAtFixedRate(timerTask, intervalInMillis, intervalInMillis);
+    private File createFlowPluginDir() {
+        File flowPluginDir = new File(getFlowDir(), "com.jetbrains.intellij");
+        flowPluginDir.mkdirs();
+        return flowPluginDir;
     }
 
     public ActivityHandler getActivityHandler() {
@@ -58,26 +56,104 @@ public class IFMController {
         batchPublisher.flush();
     }
 
-    public void initClients(String apiUrl, String apiKey) {
-        // TODO: make these configurable
-        int connectTimeoutMillis = 5000;
-        int readTimeoutMillis = 300000;
-        BatchClient batchClient = new JacksonFeignBuilder()
-                .options(new Request.Options(connectTimeoutMillis, readTimeoutMillis))
-                .target(BatchClient.class, apiUrl);
-        batchPublisher.setBatchClient(batchClient);
+    public boolean isActive() {
+        return active.get();
     }
 
-    public Duration getRecentIdleDuration() {
-        return getActivityHandler().getRecentIdleDuration();
+    public boolean isInactive() {
+        return active.get() == false;
     }
 
-    public boolean isRecording() {
-        return paused == false;
+    public void start() {
+        if (active.get() == false) {
+            FlowClient flowClient = createFlowClient();
+            pushModificationActivityTimer.start();
+            batchPublisher.start(flowClient);
+            active.set(true);
+        }
     }
 
     public void shutdown() {
-        messageQueue.pushEvent(EventType.DEACTIVATE, "IDE Shutdown");
+        if (active.compareAndSet(true, false)) {
+            pushModificationActivityTimer.cancel();
+            messageQueue.pushEvent(EventType.DEACTIVATE, "IDE Shutdown");
+        }
     }
 
+    private FlowClient createFlowClient() {
+        // TODO: make these configurable
+        int connectTimeoutMillis = 5000;
+        int readTimeoutMillis = 30000;
+//        String apiKey = resolveApiKey();
+        return new DefaultFeignConfig()
+                .jacksonFeignBuilder()
+                .options(new Request.Options(connectTimeoutMillis, readTimeoutMillis))
+                .target(FlowClient.class, API_URL);
+    }
+
+    private String resolveApiKey() {
+        File apiKeyFile = new File(getFlowDir(), "api.key");
+        if (apiKeyFile.exists() == false) {
+            throw new InvalidApiKeyException("Failed to resolve api key from file=" + apiKeyFile.getAbsolutePath());
+        }
+
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(apiKeyFile.toPath());
+        } catch (Exception ex) {
+            throw new InvalidApiKeyException("Failed to read api key from file=" + apiKeyFile.getAbsolutePath(), ex);
+        }
+        return lines.stream()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .findFirst()
+                .orElseThrow(() -> new InvalidApiKeyException("Failed to read api key from file=" + apiKeyFile.getAbsolutePath()));
+    }
+
+
+    private static final class InvalidApiKeyException extends RuntimeException {
+        InvalidApiKeyException(String message) {
+            super(message);
+        }
+
+        InvalidApiKeyException(String message, Throwable cause) {
+            super(message, cause);
+        }
+    }
+
+    private static class PushModificationActivityTimer {
+
+        private Timer timer;
+        private ActivityHandler activityHandler;
+        private long intervalInSeconds;
+
+        public PushModificationActivityTimer(ActivityHandler activityHandler, int intervalInSeconds) {
+            this.activityHandler = activityHandler;
+            this.intervalInSeconds = intervalInSeconds;
+        }
+
+        public void start() {
+            if (timer != null) {
+                timer.cancel();
+            }
+
+            TimerTask timerTask = new TimerTask() {
+                @Override
+                public void run() {
+                    activityHandler.pushModificationActivity(intervalInSeconds);
+                }
+            };
+
+            long intervalInMillis = intervalInSeconds * 1000;
+            timer = new Timer();
+            timer.scheduleAtFixedRate(timerTask, intervalInMillis, intervalInMillis);
+        }
+
+        public void cancel() {
+            timer.cancel();
+            timer = null;
+        }
+
+    }
+    
 }

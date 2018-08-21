@@ -4,7 +4,7 @@ import com.dreamscale.htmflow.api.activity.NewEditorActivity
 import com.dreamscale.htmflow.api.batch.NewBatchEvent
 import com.dreamscale.htmflow.api.batch.NewIFMBatch
 import com.dreamscale.htmflow.api.event.EventType
-import com.dreamscale.htmflow.client.BatchClient
+import com.dreamscale.htmflow.client.FlowClient
 import org.dreamscale.exception.NotFoundException
 import org.dreamscale.flow.Logger
 import org.dreamscale.time.MockTimeService
@@ -19,7 +19,7 @@ class TestBatchPublisher extends Specification {
     JSONConverter jsonConverter = new JSONConverter()
     MockTimeService timeService = new MockTimeService()
 
-    BatchClient mockBatchClient
+    FlowClient mockFlowClient
 
     void setup() {
         tempDir = new File(File.createTempFile("temp", ".txt").parentFile, "queue-dir")
@@ -29,8 +29,8 @@ class TestBatchPublisher extends Specification {
         Logger logger = Mock(Logger)
         batchPublisher = new BatchPublisher(tempDir, logger, timeService)
 
-        mockBatchClient = Mock(BatchClient)
-        batchPublisher.batchClient = mockBatchClient
+        mockFlowClient = Mock(FlowClient)
+        batchPublisher.flowClientReference.set(mockFlowClient)
     }
 
     def cleanup() {
@@ -112,7 +112,7 @@ class TestBatchPublisher extends Specification {
 
         then:
         assert batchPublisher.hasSomethingToPublish() == false
-        1 * mockBatchClient.addIFMBatch(_)
+        1 * mockFlowClient.addIFMBatch(_)
     }
 
     def "publishBatches SHOULD mark file as failed if parsing fails"() {
@@ -132,7 +132,7 @@ class TestBatchPublisher extends Specification {
     def "publishBatches should skip batch file which fails to publish"() {
         given:
         createBatchFile()
-        mockBatchClient.addIFMBatch(_) >> { throw new RuntimeException("Publication Failure") }
+        mockFlowClient.addIFMBatch(_) >> { throw new RuntimeException("Publication Failure") }
 
         when:
         batchPublisher.commitActiveFile()
@@ -146,7 +146,7 @@ class TestBatchPublisher extends Specification {
     def "publishBatches should set aside batches where the task cannot be found and resume on next session"() {
         given:
         createBatchFile()
-        mockBatchClient.addIFMBatch(_) >> { throw new NotFoundException("task not found") }
+        mockFlowClient.addIFMBatch(_) >> { throw new NotFoundException("task not found") }
 
         when:
         batchPublisher.commitActiveFile()
@@ -159,7 +159,7 @@ class TestBatchPublisher extends Specification {
         assert batchPublisher.retryNextSessionDir.listFiles().length == 1
 
         when:
-        batchPublisher.setBatchClient(mockBatchClient)
+        batchPublisher.start(mockFlowClient)
 
         then:
         assert batchPublisher.hasSomethingToPublish() == true
@@ -169,7 +169,7 @@ class TestBatchPublisher extends Specification {
         given:
         int clientCallCount = 0
         createBatchFile()
-        mockBatchClient.addIFMBatch(_) >> {
+        mockFlowClient.addIFMBatch(_) >> {
             clientCallCount++
             throw new Exception("you lose!")
         }
