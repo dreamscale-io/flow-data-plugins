@@ -107,16 +107,14 @@ public class MessageQueue {
         messageLogger.writeMessage(batchEvent);
     }
 
-    public void pushSnippet(EventType eventType, String message, String source, String snippet) {
-        NewSnippetEvent batchEvent = NewSnippetEvent.builder()
+    public void pushSnippet(String source, String snippet) {
+        NewSnippetEvent snippetEvent = NewSnippetEvent.builder()
                 .position(timeService.now())
-                .eventType(eventType)
-                .comment(message)
                 .source(source)
                 .snippet(snippet)
                 .build();
 
-        messageLogger.writeMessage(batchEvent);
+        messageLogger.writeMessage(snippetEvent);
     }
 
 

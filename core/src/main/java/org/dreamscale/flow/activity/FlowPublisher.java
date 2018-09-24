@@ -7,7 +7,6 @@ import com.dreamscale.htmflow.api.activity.NewIdleActivity;
 import com.dreamscale.htmflow.api.activity.NewModificationActivity;
 import com.dreamscale.htmflow.api.batch.NewBatchEvent;
 import com.dreamscale.htmflow.api.batch.NewIFMBatch;
-import com.dreamscale.htmflow.api.event.NewSnippetEvent;
 import com.dreamscale.htmflow.client.FlowClient;
 import org.dreamscale.exception.NotFoundException;
 import org.dreamscale.flow.Logger;
@@ -192,14 +191,19 @@ public class FlowPublisher implements Runnable {
 
     }
 
-    private void publishBatch(NewIFMBatch batch) {
-        FlowClient batchClient = flowClientReference.get();
-        if (batchClient == null) {
+    private FlowClient acquireFlowClient() {
+        FlowClient flowClient = flowClientReference.get();
+        if (flowClient == null) {
             throw new ServerUnavailableException("BatchClient is unavailable");
         }
+        return flowClient;
+    }
 
+    private void publishBatch(NewIFMBatch batch) {
         if (batch.isEmpty() == false) {
-            batchClient.addIFMBatch(batch);
+            FlowClient flowClient = acquireFlowClient();
+
+            flowClient.addIFMBatch(batch);
         }
     }
 
@@ -228,8 +232,6 @@ public class FlowPublisher implements Runnable {
             builder.modificationActivity((NewModificationActivity) object);
         } else if (object instanceof NewBatchEvent) {
             builder.event((NewBatchEvent) object);
-        } else if (object instanceof NewSnippetEvent) {
-            builder.snippetEvent((NewSnippetEvent) object);
         } else {
             throw new RuntimeException("Unrecognized batch object=" + String.valueOf(object));
         }

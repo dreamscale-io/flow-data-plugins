@@ -110,6 +110,9 @@ public class IFMController {
                 .orElseThrow(() -> new InvalidApiKeyException("Failed to read api key from file=" + apiKeyFile.getAbsolutePath()));
     }
 
+    public void addSnippet(String source, String snippet) {
+        messageQueue.pushSnippet(source, snippet);
+    }
 
     private static final class InvalidApiKeyException extends RuntimeException {
         InvalidApiKeyException(String message) {
