@@ -31,7 +31,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class BatchPublisher implements Runnable {
+public class FlowPublisher implements Runnable {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
@@ -53,7 +53,7 @@ public class BatchPublisher implements Runnable {
     private TimeService timeService;
     private PublishingLock publishingLock;
 
-    public BatchPublisher(File baseDir, Logger logger, TimeService timeService) {
+    public FlowPublisher(File baseDir, Logger logger, TimeService timeService) {
         this.logger = logger;
         this.timeService = timeService;
         this.activeFile = new File(baseDir, "active.log");

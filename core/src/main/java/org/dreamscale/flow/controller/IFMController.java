@@ -6,7 +6,7 @@ import feign.Request;
 import org.dreamscale.feign.DefaultFeignConfig;
 import org.dreamscale.flow.Logger;
 import org.dreamscale.flow.activity.ActivityHandler;
-import org.dreamscale.flow.activity.BatchPublisher;
+import org.dreamscale.flow.activity.FlowPublisher;
 import org.dreamscale.flow.activity.MessageQueue;
 import org.dreamscale.time.LocalDateTimeService;
 
@@ -25,14 +25,14 @@ public class IFMController {
     private AtomicBoolean active = new AtomicBoolean(false);
     private ActivityHandler activityHandler;
     private MessageQueue messageQueue;
-    private BatchPublisher batchPublisher;
+    private FlowPublisher flowPublisher;
     private PushModificationActivityTimer pushModificationActivityTimer;
 
     public IFMController(Logger logger) {
         File ideaFlowDir = createFlowPluginDir();
         LocalDateTimeService timeService = new LocalDateTimeService();
-        batchPublisher = new BatchPublisher(ideaFlowDir, logger, timeService);
-        messageQueue = new MessageQueue(batchPublisher, timeService);
+        flowPublisher = new FlowPublisher(ideaFlowDir, logger, timeService);
+        messageQueue = new MessageQueue(flowPublisher, timeService);
         activityHandler = new ActivityHandler(this, messageQueue, timeService);
         pushModificationActivityTimer = new PushModificationActivityTimer(activityHandler, 30);
     }
@@ -53,7 +53,7 @@ public class IFMController {
 
     public void flushBatch() {
         messageQueue.flush();
-        batchPublisher.flush();
+        flowPublisher.flush();
     }
 
     public boolean isActive() {
@@ -68,7 +68,7 @@ public class IFMController {
         if (active.get() == false) {
             FlowClient flowClient = createFlowClient();
             pushModificationActivityTimer.start();
-            batchPublisher.start(flowClient);
+            flowPublisher.start(flowClient);
             active.set(true);
         }
     }

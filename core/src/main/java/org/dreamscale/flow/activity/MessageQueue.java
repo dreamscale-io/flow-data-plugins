@@ -24,7 +24,7 @@ public class MessageQueue {
     private MessageLogger messageLogger;
     private TimeService timeService;
 
-    public MessageQueue(BatchPublisher batchPublisher, TimeService timeService) {
+    public MessageQueue(FlowPublisher batchPublisher, TimeService timeService) {
         this(new FileMessageLogger(batchPublisher, timeService), timeService);
     }
 
@@ -122,7 +122,7 @@ public class MessageQueue {
 
     static class FileMessageLogger implements MessageLogger {
         private TimeService timeService;
-        private BatchPublisher batchPublisher;
+        private FlowPublisher batchPublisher;
         private Map<Long, File> activeMessageFiles = new HashMap<>();
 
         private final Object lock = new Object();
@@ -134,7 +134,7 @@ public class MessageQueue {
         private final int BATCH_TIME_LIMIT_IN_SECONDS = 30 * 60;
         private final int BATCH_MESSAGE_LIMIT = 500;
 
-        FileMessageLogger(BatchPublisher batchPublisher, TimeService timeService) {
+        FileMessageLogger(FlowPublisher batchPublisher, TimeService timeService) {
             this.batchPublisher = batchPublisher;
             this.timeService = timeService;
 

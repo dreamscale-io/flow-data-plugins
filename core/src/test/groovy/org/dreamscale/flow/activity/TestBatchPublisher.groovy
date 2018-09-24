@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 
 class TestBatchPublisher extends Specification {
 
-    BatchPublisher batchPublisher
+    FlowPublisher flowPublisher
     File tempDir
     JSONConverter jsonConverter = new JSONConverter()
     MockTimeService timeService = new MockTimeService()
@@ -27,16 +27,16 @@ class TestBatchPublisher extends Specification {
         tempDir.mkdirs()
 
         Logger logger = Mock(Logger)
-        batchPublisher = new BatchPublisher(tempDir, logger, timeService)
+        flowPublisher = new FlowPublisher(tempDir, logger, timeService)
 
         mockFlowClient = Mock(FlowClient)
-        batchPublisher.flowClientReference.set(mockFlowClient)
+        flowPublisher.flowClientReference.set(mockFlowClient)
     }
 
     def cleanup() {
         tempDir.delete()
 
-        List<File> batchFiles = batchPublisher.getBatchesToPublish()
+        List<File> batchFiles = flowPublisher.getBatchesToPublish()
         batchFiles.each { File file ->
             file.delete()
         }
@@ -44,14 +44,14 @@ class TestBatchPublisher extends Specification {
 
     def "commitBatch SHOULD create stuff to publish"() {
         given:
-        File tmpFile = batchPublisher.getActiveFile()
+        File tmpFile = flowPublisher.getActiveFile()
         tmpFile << "some stuff"
 
         when:
-        batchPublisher.commitActiveFile()
+        flowPublisher.commitActiveFile()
 
         then:
-        assert batchPublisher.hasSomethingToPublish()
+        assert flowPublisher.hasSomethingToPublish()
     }
 
     private NewEditorActivity createEditorActivity() {
@@ -65,7 +65,7 @@ class TestBatchPublisher extends Specification {
 
     private File createBatchFile() {
         NewEditorActivity editorActivity = createEditorActivity()
-        File tmpFile = batchPublisher.getActiveFile()
+        File tmpFile = flowPublisher.getActiveFile()
         tmpFile << jsonConverter.toJSON(editorActivity) + "\n"
         tmpFile
     }
@@ -75,7 +75,7 @@ class TestBatchPublisher extends Specification {
         File tmpFile = createBatchFile()
 
         when:
-        NewIFMBatch batch = batchPublisher.convertBatchFileToObject(tmpFile)
+        NewIFMBatch batch = flowPublisher.convertBatchFileToObject(tmpFile)
 
         then:
         assert batch != null
@@ -95,7 +95,7 @@ class TestBatchPublisher extends Specification {
         tmpFile << jsonConverter.toJSON(batchEvent) + "\n"
 
         when:
-        NewIFMBatch batch = batchPublisher.convertBatchFileToObject(tmpFile)
+        NewIFMBatch batch = flowPublisher.convertBatchFileToObject(tmpFile)
 
         then:
         assert batch != null
@@ -107,25 +107,25 @@ class TestBatchPublisher extends Specification {
         createBatchFile()
 
         when:
-        batchPublisher.commitActiveFile()
-        batchPublisher.publishBatches()
+        flowPublisher.commitActiveFile()
+        flowPublisher.publishBatches()
 
         then:
-        assert batchPublisher.hasSomethingToPublish() == false
+        assert flowPublisher.hasSomethingToPublish() == false
         1 * mockFlowClient.addIFMBatch(_)
     }
 
     def "publishBatches SHOULD mark file as failed if parsing fails"() {
         given:
-        File file = batchPublisher.getActiveFile()
+        File file = flowPublisher.getActiveFile()
         file << "illegal json"
 
         when:
-        batchPublisher.commitActiveFile()
-        batchPublisher.publishBatches()
+        flowPublisher.commitActiveFile()
+        flowPublisher.publishBatches()
 
         then:
-        File[] files = batchPublisher.failedDir.listFiles()
+        File[] files = flowPublisher.failedDir.listFiles()
         assert files.length == 1
     }
 
@@ -135,12 +135,12 @@ class TestBatchPublisher extends Specification {
         mockFlowClient.addIFMBatch(_) >> { throw new RuntimeException("Publication Failure") }
 
         when:
-        batchPublisher.commitActiveFile()
-        batchPublisher.publishBatches()
+        flowPublisher.commitActiveFile()
+        flowPublisher.publishBatches()
 
         then:
-        assert batchPublisher.hasSomethingToPublish() == false
-        assert batchPublisher.publishDir.listFiles().length == 1
+        assert flowPublisher.hasSomethingToPublish() == false
+        assert flowPublisher.publishDir.listFiles().length == 1
     }
 
     def "publishBatches should set aside batches where the task cannot be found and resume on next session"() {
@@ -149,20 +149,20 @@ class TestBatchPublisher extends Specification {
         mockFlowClient.addIFMBatch(_) >> { throw new NotFoundException("task not found") }
 
         when:
-        batchPublisher.commitActiveFile()
-        batchPublisher.publishBatches()
+        flowPublisher.commitActiveFile()
+        flowPublisher.publishBatches()
 
         then:
-        assert batchPublisher.hasSomethingToPublish() == false
+        assert flowPublisher.hasSomethingToPublish() == false
 
         and:
-        assert batchPublisher.retryNextSessionDir.listFiles().length == 1
+        assert flowPublisher.retryNextSessionDir.listFiles().length == 1
 
         when:
-        batchPublisher.start(mockFlowClient)
+        flowPublisher.start(mockFlowClient)
 
         then:
-        assert batchPublisher.hasSomethingToPublish() == true
+        assert flowPublisher.hasSomethingToPublish() == true
     }
 
     def "publishBatches should delay retry of failed batch until tomorrow"() {
@@ -175,23 +175,23 @@ class TestBatchPublisher extends Specification {
         }
 
         when:
-        batchPublisher.commitActiveFile()
-        batchPublisher.publishBatches()
+        flowPublisher.commitActiveFile()
+        flowPublisher.publishBatches()
 
         then:
         assert clientCallCount == 1
-        assert batchPublisher.hasSomethingToPublish() == false
-        assert batchPublisher.publishDir.listFiles().length == 1
+        assert flowPublisher.hasSomethingToPublish() == false
+        assert flowPublisher.publishDir.listFiles().length == 1
 
         when:
-        batchPublisher.publishBatches()
+        flowPublisher.publishBatches()
 
         then:
         assert clientCallCount == 1
 
         when:
         timeService.plusDays(2)
-        batchPublisher.publishBatches()
+        flowPublisher.publishBatches()
 
         then:
         assert clientCallCount == 2
