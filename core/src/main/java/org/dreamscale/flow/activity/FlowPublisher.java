@@ -6,7 +6,7 @@ import com.dreamscale.htmflow.api.activity.NewExternalActivity;
 import com.dreamscale.htmflow.api.activity.NewIdleActivity;
 import com.dreamscale.htmflow.api.activity.NewModificationActivity;
 import com.dreamscale.htmflow.api.batch.NewBatchEvent;
-import com.dreamscale.htmflow.api.batch.NewIFMBatch;
+import com.dreamscale.htmflow.api.batch.NewFlowBatch;
 import com.dreamscale.htmflow.client.FlowClient;
 import org.dreamscale.exception.NotFoundException;
 import org.dreamscale.flow.Logger;
@@ -169,7 +169,7 @@ public class FlowPublisher implements Runnable {
     }
 
     private void convertPublishAndDeleteBatch(final File batchFile) {
-        NewIFMBatch batch;
+        NewFlowBatch batch;
         try {
             batch = convertBatchFileToObject(batchFile);
         } catch (Exception ex) {
@@ -199,16 +199,16 @@ public class FlowPublisher implements Runnable {
         return flowClient;
     }
 
-    private void publishBatch(NewIFMBatch batch) {
+    private void publishBatch(NewFlowBatch batch) {
         if (batch.isEmpty() == false) {
             FlowClient flowClient = acquireFlowClient();
 
-            flowClient.addIFMBatch(batch);
+            flowClient.addBatch(batch);
         }
     }
 
-    private NewIFMBatch convertBatchFileToObject(File batchFile) throws IOException {
-        NewIFMBatch.NewIFMBatchBuilder builder = NewIFMBatch.builder()
+    private NewFlowBatch convertBatchFileToObject(File batchFile) throws IOException {
+        NewFlowBatch.NewFlowBatchBuilder builder = NewFlowBatch.builder()
                 .timeSent(timeService.now());
 
         BufferedReader reader = new BufferedReader(new FileReader(batchFile));
@@ -219,7 +219,7 @@ public class FlowPublisher implements Runnable {
         return builder.build();
     }
 
-    private void addObjectToBatch(NewIFMBatch.NewIFMBatchBuilder builder, final Object object) {
+    private void addObjectToBatch(NewFlowBatch.NewFlowBatchBuilder builder, final Object object) {
         if (object instanceof NewEditorActivity) {
             builder.editorActivity((NewEditorActivity) object);
         } else if (object instanceof NewExternalActivity) {

@@ -2,7 +2,7 @@ package org.dreamscale.flow.activity
 
 import com.dreamscale.htmflow.api.activity.NewEditorActivity
 import com.dreamscale.htmflow.api.batch.NewBatchEvent
-import com.dreamscale.htmflow.api.batch.NewIFMBatch
+import com.dreamscale.htmflow.api.batch.NewFlowBatch
 import com.dreamscale.htmflow.api.event.EventType
 import com.dreamscale.htmflow.client.FlowClient
 import org.dreamscale.exception.NotFoundException
@@ -75,7 +75,7 @@ class TestBatchPublisher extends Specification {
         File tmpFile = createBatchFile()
 
         when:
-        NewIFMBatch batch = flowPublisher.convertBatchFileToObject(tmpFile)
+        NewFlowBatch batch = flowPublisher.convertBatchFileToObject(tmpFile)
 
         then:
         assert batch != null
@@ -95,7 +95,7 @@ class TestBatchPublisher extends Specification {
         tmpFile << jsonConverter.toJSON(batchEvent) + "\n"
 
         when:
-        NewIFMBatch batch = flowPublisher.convertBatchFileToObject(tmpFile)
+        NewFlowBatch batch = flowPublisher.convertBatchFileToObject(tmpFile)
 
         then:
         assert batch != null
@@ -112,7 +112,7 @@ class TestBatchPublisher extends Specification {
 
         then:
         assert flowPublisher.hasSomethingToPublish() == false
-        1 * mockFlowClient.addIFMBatch(_)
+        1 * mockFlowClient.addBatch(_)
     }
 
     def "publishBatches SHOULD mark file as failed if parsing fails"() {
@@ -132,7 +132,7 @@ class TestBatchPublisher extends Specification {
     def "publishBatches should skip batch file which fails to publish"() {
         given:
         createBatchFile()
-        mockFlowClient.addIFMBatch(_) >> { throw new RuntimeException("Publication Failure") }
+        mockFlowClient.addBatch(_) >> { throw new RuntimeException("Publication Failure") }
 
         when:
         flowPublisher.commitActiveFile()
@@ -146,7 +146,7 @@ class TestBatchPublisher extends Specification {
     def "publishBatches should set aside batches where the task cannot be found and resume on next session"() {
         given:
         createBatchFile()
-        mockFlowClient.addIFMBatch(_) >> { throw new NotFoundException("task not found") }
+        mockFlowClient.addBatch(_) >> { throw new NotFoundException("task not found") }
 
         when:
         flowPublisher.commitActiveFile()
@@ -169,7 +169,7 @@ class TestBatchPublisher extends Specification {
         given:
         int clientCallCount = 0
         createBatchFile()
-        mockFlowClient.addIFMBatch(_) >> {
+        mockFlowClient.addBatch(_) >> {
             clientCallCount++
             throw new Exception("you lose!")
         }

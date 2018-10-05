@@ -1,8 +1,11 @@
 package org.dreamscale.flow.controller;
 
 import com.dreamscale.htmflow.api.event.EventType;
+import com.dreamscale.htmflow.api.event.NewSnippetEvent;
 import com.dreamscale.htmflow.client.FlowClient;
 import feign.Request;
+import feign.RequestInterceptor;
+import feign.RequestTemplate;
 import org.dreamscale.feign.DefaultFeignConfig;
 import org.dreamscale.flow.Logger;
 import org.dreamscale.flow.activity.ActivityHandler;
@@ -12,6 +15,7 @@ import org.dreamscale.time.LocalDateTimeService;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -26,6 +30,7 @@ public class IFMController {
     private ActivityHandler activityHandler;
     private MessageQueue messageQueue;
     private FlowPublisher flowPublisher;
+    private FlowClient flowClient;
     private PushModificationActivityTimer pushModificationActivityTimer;
 
     public IFMController(Logger logger) {
@@ -66,7 +71,7 @@ public class IFMController {
 
     public void start() {
         if (active.get() == false) {
-            FlowClient flowClient = createFlowClient();
+            flowClient = createFlowClient();
             pushModificationActivityTimer.start();
             flowPublisher.start(flowClient);
             active.set(true);
@@ -84,9 +89,10 @@ public class IFMController {
         // TODO: make these configurable
         int connectTimeoutMillis = 5000;
         int readTimeoutMillis = 30000;
-//        String apiKey = resolveApiKey();
+        String apiKey = resolveApiKey();
         return new DefaultFeignConfig()
                 .jacksonFeignBuilder()
+                .requestInterceptor(new StaticAuthHeaderRequestInterceptor(apiKey))
                 .options(new Request.Options(connectTimeoutMillis, readTimeoutMillis))
                 .target(FlowClient.class, API_URL);
     }
@@ -111,7 +117,13 @@ public class IFMController {
     }
 
     public void addSnippet(String source, String snippet) {
-        messageQueue.pushSnippet(source, snippet);
+        NewSnippetEvent snippetEvent = NewSnippetEvent.builder()
+                .eventType(EventType.SNIPPET)
+                .source(source)
+                .snippet(snippet)
+                .position(LocalDateTime.now())
+                .build();
+        flowClient.addSnippet(snippetEvent);
     }
 
     private static final class InvalidApiKeyException extends RuntimeException {
@@ -158,5 +170,19 @@ public class IFMController {
         }
 
     }
-    
+
+    private static class StaticAuthHeaderRequestInterceptor implements RequestInterceptor {
+
+        private String apiKey;
+
+        public StaticAuthHeaderRequestInterceptor(String apiKey) {
+            this.apiKey = apiKey;
+        }
+
+        @Override
+        public void apply(RequestTemplate template) {
+            template.header("X-API-KEY", apiKey);
+        }
+
+    }
 }
