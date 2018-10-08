@@ -23,8 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class IFMController {
 
-    private static final String API_URL = "http://localhost:8080";
-//    private static final String API_URL = "http://htmflow.dreamscale.io";
+//    private static final String API_URL = "http://localhost:8080";
+    private static final String API_URL = "https://torchie.dreamscale.io";
 
     private AtomicBoolean active = new AtomicBoolean(false);
     private ActivityHandler activityHandler;
