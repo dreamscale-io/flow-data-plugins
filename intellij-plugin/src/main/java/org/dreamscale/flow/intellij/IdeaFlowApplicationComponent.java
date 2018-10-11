@@ -11,7 +11,6 @@ import com.intellij.util.messages.MessageBusConnection;
 import org.dreamscale.flow.controller.IFMController;
 import org.dreamscale.flow.intellij.handler.DeactivationHandler;
 import org.dreamscale.flow.intellij.handler.VirtualFileActivityHandler;
-import org.dreamscale.flow.intellij.settings.IdeaFlowSettings;
 
 import javax.swing.Icon;
 
@@ -60,34 +59,26 @@ public class IdeaFlowApplicationComponent extends ApplicationComponent.Adapter {
         controller = new IFMController(log);
         virtualFileActivityHandler = new VirtualFileActivityHandler(controller.getActivityHandler());
 
-        initIfmController(IdeaFlowSettings.getInstance());
-
+        try {
+            controller.start();
+        } catch (Exception ex) {
+            // TODO: this should be a message popup to the user
+            log.error("Disabling @torchie Flow Metrics Plugin due to controller initialization failure: " + ex.getMessage(), ex.getCause());
+        }
+         
         ApplicationListener applicationListener = new ApplicationListener(controller);
         appConnection = ApplicationManager.getApplication().getMessageBus().connect();
         appConnection.subscribe(ApplicationActivationListener.TOPIC, applicationListener);
     }
 
-    public void initIfmController(IdeaFlowSettings settingsStore) {
-        String apiUrl = settingsStore.getApiUrl();
-        String apiKey = settingsStore.getApiKey();
-        if ((apiUrl == null) || (apiKey == null)) {
-            log.info("Disabling Idea Flow Plugin controls because API-Key or URL is unavailable {ApiUrl=$apiUrl, ApiKey=$apiKey}. " +
-                             "Please fix the plugin configuration in your IDE Preferences");
-            return;
-        }
-
-        try {
-            controller.initClients(apiUrl, apiKey);
-        } catch (Exception ex) {
-            // TODO: this should be a message popup to the user
-            log.error("Failed to initialize controller: " + ex.getMessage());
-        }
-    }
-
     @Override
     public void disposeComponent() {
-        controller.shutdown();
-        appConnection.disconnect();
+        if (controller != null) {
+            controller.shutdown();
+        }
+        if (appConnection != null) {
+            appConnection.disconnect();
+        }
     }
 
     private static class ApplicationListener extends ApplicationActivationListener.Adapter {

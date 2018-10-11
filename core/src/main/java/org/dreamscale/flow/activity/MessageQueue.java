@@ -24,7 +24,7 @@ public class MessageQueue {
     private MessageLogger messageLogger;
     private TimeService timeService;
 
-    public MessageQueue(BatchPublisher batchPublisher, TimeService timeService) {
+    public MessageQueue(FlowPublisher batchPublisher, TimeService timeService) {
         this(new FileMessageLogger(batchPublisher, timeService), timeService);
     }
 
@@ -107,22 +107,20 @@ public class MessageQueue {
         messageLogger.writeMessage(batchEvent);
     }
 
-    public void pushSnippet(EventType eventType, String message, String source, String snippet) {
-        NewSnippetEvent batchEvent = NewSnippetEvent.builder()
+    public void pushSnippet(String source, String snippet) {
+        NewSnippetEvent snippetEvent = NewSnippetEvent.builder()
                 .position(timeService.now())
-                .eventType(eventType)
-                .comment(message)
                 .source(source)
                 .snippet(snippet)
                 .build();
 
-        messageLogger.writeMessage(batchEvent);
+        messageLogger.writeMessage(snippetEvent);
     }
 
 
     static class FileMessageLogger implements MessageLogger {
         private TimeService timeService;
-        private BatchPublisher batchPublisher;
+        private FlowPublisher batchPublisher;
         private Map<Long, File> activeMessageFiles = new HashMap<>();
 
         private final Object lock = new Object();
@@ -134,7 +132,7 @@ public class MessageQueue {
         private final int BATCH_TIME_LIMIT_IN_SECONDS = 30 * 60;
         private final int BATCH_MESSAGE_LIMIT = 500;
 
-        FileMessageLogger(BatchPublisher batchPublisher, TimeService timeService) {
+        FileMessageLogger(FlowPublisher batchPublisher, TimeService timeService) {
             this.batchPublisher = batchPublisher;
             this.timeService = timeService;
 

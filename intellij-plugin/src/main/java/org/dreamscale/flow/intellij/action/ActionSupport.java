@@ -38,4 +38,14 @@ public class ActionSupport {
         return fileName;
     }
 
+    public static boolean isActive(AnActionEvent e) {
+        IFMController controller = getIFMController(e);
+        return controller != null && controller.isActive();
+    }
+
+    public static void disableWhenNotRecording(AnActionEvent e) {
+        Presentation presentation = e.getPresentation();
+        presentation.setEnabled(isActive(e));
+    }
+
 }

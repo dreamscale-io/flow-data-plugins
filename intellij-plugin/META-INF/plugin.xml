@@ -10,9 +10,8 @@
 	<depends>com.intellij.modules.platform</depends>
 	<depends>com.intellij.modules.lang</depends>
 
-
 	<!-- please see http://confluence.jetbrains.net/display/IDEADEV/Build+Number+Ranges for description -->
-	<idea-version since-build="107.105"/>
+	<idea-version since-build="181"/>
 
 	<!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
 		 on how to target different products -->
@@ -32,14 +31,9 @@
 	</project-components>
 
 	<actions>
-
-		<action id="org.dreamscale.flow.Pain" class="org.dreamscale.flow.intellij.action.event.CreatePainEvent" text="WTF?!"
-                description="Mark the start of confusion (unexpected observation)" icon="/icons/pain.png">
-			<!--<keyboard-shortcut keymap="$default" first-keystroke="meta shift p"/>-->
-		</action>
-		<action id="org.dreamscale.flow.Awesome" class="org.dreamscale.flow.intellij.action.event.CreateAwesomeEvent" text="YAY!"
-                description="Celebrate the success of solving the problem!" icon="/icons/awesome.png">
-			<!--<keyboard-shortcut keymap="$default" first-keystroke="meta shift a"/>-->
+		<action id="org.dreamscale.flow.Snippet" class="org.dreamscale.flow.intellij.action.event.CreateSnippetEvent" text="Create Snippet"
+                description="Create a snippet from the currently selected text">
+			<keyboard-shortcut keymap="$default" first-keystroke="meta shift s"/>
 		</action>
 
 		<action id="org.dreamscale.flow.FlushBatch" class="org.dreamscale.flow.intellij.action.event.FlushBatchEvent" text="Flush current batch"
@@ -49,13 +43,10 @@
 		<group id="org.dreamscale.flow.EditorPopupMenu">
 			<add-to-group group-id="EditorPopupMenu" anchor="last"/>
 			<add-to-group group-id="ConsoleEditorPopupMenu" anchor="last"/>
+			<separator/>
+			<reference ref="org.dreamscale.flow.Snippet"/>
 		</group>
 
 	</actions>
-
-	<extensions defaultExtensionNs="com.intellij">
-		<applicationService serviceImplementation="org.dreamscale.flow.intellij.settings.IdeaFlowSettings"/>
-		<applicationConfigurable instance="org.dreamscale.flow.intellij.settings.IdeaFlowSettingsPage"/>
-	</extensions>
 
 </idea-plugin>

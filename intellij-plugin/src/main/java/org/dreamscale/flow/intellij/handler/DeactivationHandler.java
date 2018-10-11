@@ -16,11 +16,13 @@ public class DeactivationHandler {
     private static final Duration DEACTIVATION_THRESHOLD = Duration.ofMinutes(50);
     private static final Duration AUTO_IDLE_THRESHOLD = Duration.ofHours(8);
 
+    private IFMController controller;
     private ActivityHandler activityHandler;
     private Long deactivatedAt;
     private boolean promptingForIdleTime;
 
     public DeactivationHandler(IFMController controller) {
+        this.controller = controller;
         this.activityHandler = controller.getActivityHandler();
     }
 
@@ -33,6 +35,10 @@ public class DeactivationHandler {
     }
 
     public void markActiveFileEventAsIdleIfDeactivationThresholdExceeded(Project project) {
+        if (controller.isInactive()) {
+            return;
+        }
+
         Duration deactivationDuration = getDeactivationDuration();
         if (deactivationDuration == null) {
             return;

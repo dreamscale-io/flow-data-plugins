@@ -6,9 +6,8 @@ import com.dreamscale.htmflow.api.activity.NewExternalActivity;
 import com.dreamscale.htmflow.api.activity.NewIdleActivity;
 import com.dreamscale.htmflow.api.activity.NewModificationActivity;
 import com.dreamscale.htmflow.api.batch.NewBatchEvent;
-import com.dreamscale.htmflow.api.batch.NewIFMBatch;
-import com.dreamscale.htmflow.api.event.NewSnippetEvent;
-import com.dreamscale.htmflow.client.BatchClient;
+import com.dreamscale.htmflow.api.batch.NewFlowBatch;
+import com.dreamscale.htmflow.client.FlowClient;
 import org.dreamscale.exception.NotFoundException;
 import org.dreamscale.flow.Logger;
 import org.dreamscale.time.TimeService;
@@ -31,7 +30,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class BatchPublisher implements Runnable {
+public class FlowPublisher implements Runnable {
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
 
@@ -44,7 +43,7 @@ public class BatchPublisher implements Runnable {
     private AtomicReference<Thread> runThreadHolder = new AtomicReference<>();
     private JSONConverter jsonConverter = new JSONConverter();
     private Map<File, Integer> failedFileToLastDayRetriedMap = new LinkedHashMap<>();
-    private AtomicReference<BatchClient> batchClientReference = new AtomicReference<>();
+    private AtomicReference<FlowClient> flowClientReference = new AtomicReference<>();
     private Logger logger;
     private File activeFile;
     private File publishDir;
@@ -53,7 +52,7 @@ public class BatchPublisher implements Runnable {
     private TimeService timeService;
     private PublishingLock publishingLock;
 
-    public BatchPublisher(File baseDir, Logger logger, TimeService timeService) {
+    public FlowPublisher(File baseDir, Logger logger, TimeService timeService) {
         this.logger = logger;
         this.timeService = timeService;
         this.activeFile = new File(baseDir, "active.log");
@@ -61,8 +60,6 @@ public class BatchPublisher implements Runnable {
         this.failedDir = createDir(baseDir, "failed");
         this.retryNextSessionDir = createDir(baseDir, "retryNextSession");
         this.publishingLock = new PublishingLock(logger, baseDir);
-
-        commitActiveFile();
     }
 
     private File createDir(File baseDir, String name) {
@@ -82,8 +79,10 @@ public class BatchPublisher implements Runnable {
         }
     }
 
-    public void setBatchClient(BatchClient activityClient) {
-        batchClientReference.set(activityClient);
+    public void start(FlowClient activityClient) {
+        flowClientReference.set(activityClient);
+
+        commitActiveFile();
 
         for (File fileToRetry : retryNextSessionDir.listFiles()) {
             moveFileToDir(fileToRetry, publishDir);
@@ -170,7 +169,7 @@ public class BatchPublisher implements Runnable {
     }
 
     private void convertPublishAndDeleteBatch(final File batchFile) {
-        NewIFMBatch batch;
+        NewFlowBatch batch;
         try {
             batch = convertBatchFileToObject(batchFile);
         } catch (Exception ex) {
@@ -192,19 +191,24 @@ public class BatchPublisher implements Runnable {
 
     }
 
-    private void publishBatch(NewIFMBatch batch) {
-        BatchClient batchClient = batchClientReference.get();
-        if (batchClient == null) {
+    private FlowClient acquireFlowClient() {
+        FlowClient flowClient = flowClientReference.get();
+        if (flowClient == null) {
             throw new ServerUnavailableException("BatchClient is unavailable");
         }
+        return flowClient;
+    }
 
+    private void publishBatch(NewFlowBatch batch) {
         if (batch.isEmpty() == false) {
-            batchClient.addIFMBatch(batch);
+            FlowClient flowClient = acquireFlowClient();
+
+            flowClient.addBatch(batch);
         }
     }
 
-    private NewIFMBatch convertBatchFileToObject(File batchFile) throws IOException {
-        NewIFMBatch.NewIFMBatchBuilder builder = NewIFMBatch.builder()
+    private NewFlowBatch convertBatchFileToObject(File batchFile) throws IOException {
+        NewFlowBatch.NewFlowBatchBuilder builder = NewFlowBatch.builder()
                 .timeSent(timeService.now());
 
         BufferedReader reader = new BufferedReader(new FileReader(batchFile));
@@ -215,7 +219,7 @@ public class BatchPublisher implements Runnable {
         return builder.build();
     }
 
-    private void addObjectToBatch(NewIFMBatch.NewIFMBatchBuilder builder, final Object object) {
+    private void addObjectToBatch(NewFlowBatch.NewFlowBatchBuilder builder, final Object object) {
         if (object instanceof NewEditorActivity) {
             builder.editorActivity((NewEditorActivity) object);
         } else if (object instanceof NewExternalActivity) {
@@ -228,8 +232,6 @@ public class BatchPublisher implements Runnable {
             builder.modificationActivity((NewModificationActivity) object);
         } else if (object instanceof NewBatchEvent) {
             builder.event((NewBatchEvent) object);
-        } else if (object instanceof NewSnippetEvent) {
-            builder.snippetEvent((NewSnippetEvent) object);
         } else {
             throw new RuntimeException("Unrecognized batch object=" + String.valueOf(object));
         }
