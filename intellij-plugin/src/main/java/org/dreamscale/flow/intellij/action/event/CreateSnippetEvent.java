@@ -23,8 +23,14 @@ public class CreateSnippetEvent extends AnAction {
             boolean isConsole = ConsoleViewUtil.isConsoleViewEditor(editor);
 
             String snippet = ActionSupport.getSelectedText(editor);
-            String source = ActionSupport.getActiveFilePath(project, file);
-            controller.addSnippet(snippet, source);
+            String source = null;
+
+            if (isConsole) {
+                source = "Console";
+            } else {
+                source = ActionSupport.getActiveFilePath(project, file);
+            }
+            controller.addSnippet(source, snippet);
         }
     }
 

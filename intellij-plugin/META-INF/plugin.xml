@@ -1,11 +1,11 @@
 <idea-plugin version="2">
 	<id>org.dreamscale.flow</id>
-	<name>@torchie Flow Metrics</name>
-	<description>Capture the tacit knowledge of troubleshooting sessions into your @torchie RealTime Scrapbook,
-		along with automated Flow Metrics that measure the WTFs you experience as you work.
-		What's the biggest cause of WTFs across your Team?  Who's struggling with a WTF right now?
+	<name>Torchie Flow Metrics</name>
+	<description>Capture automated flow metrics from your developer experience as you navigate around the code,
+		modify code, and execute tests.  This plugin is designed to work with Torchie Console.
+		For more information, see dreamscale.io
 	</description>
-	<version>0.20</version>
+	<version>0.21</version>
 	<vendor>DreamScale, Inc.</vendor>
 	<depends>com.intellij.modules.platform</depends>
 	<depends>com.intellij.modules.lang</depends>
@@ -31,8 +31,9 @@
 	</project-components>
 
 	<actions>
-		<action id="org.dreamscale.flow.Snippet" class="org.dreamscale.flow.intellij.action.event.CreateSnippetEvent" text="Create Snippet"
-                description="Create a snippet from the currently selected text">
+		<action id="org.dreamscale.flow.Snippet" class="org.dreamscale.flow.intellij.action.event.CreateSnippetEvent" text="Send Snippet to Torchie"
+                description="Sends a snippet from the currently selected text to Torchie"
+				icon="/icons/torchie.png">
 			<keyboard-shortcut keymap="$default" first-keystroke="meta shift s"/>
 		</action>
 

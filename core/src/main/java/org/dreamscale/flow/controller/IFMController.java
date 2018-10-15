@@ -3,6 +3,9 @@ package org.dreamscale.flow.controller;
 import com.dreamscale.htmflow.api.event.EventType;
 import com.dreamscale.htmflow.api.event.NewSnippetEvent;
 import com.dreamscale.htmflow.client.FlowClient;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
@@ -11,9 +14,12 @@ import org.dreamscale.flow.Logger;
 import org.dreamscale.flow.activity.ActivityHandler;
 import org.dreamscale.flow.activity.FlowPublisher;
 import org.dreamscale.flow.activity.MessageQueue;
+import org.dreamscale.jackson.ObjectMapperBuilder;
+import org.dreamscale.logging.RequestResponseLoggerFactory;
 import org.dreamscale.time.LocalDateTimeService;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -89,31 +95,36 @@ public class IFMController {
         // TODO: make these configurable
         int connectTimeoutMillis = 5000;
         int readTimeoutMillis = 30000;
-        String apiKey = resolveApiKey();
+
+        ApiSettings apiSettings = resolveApiSettings();
+
         return new DefaultFeignConfig()
                 .jacksonFeignBuilder()
-                .requestInterceptor(new StaticAuthHeaderRequestInterceptor(apiKey))
+                .requestResponseLoggerFactory(new RequestResponseLoggerFactory())
+                .requestInterceptor(new StaticAuthHeaderRequestInterceptor(apiSettings.getApiKey()))
                 .options(new Request.Options(connectTimeoutMillis, readTimeoutMillis))
-                .target(FlowClient.class, API_URL);
+                .target(FlowClient.class, apiSettings.getApiUrl());
     }
 
-    private String resolveApiKey() {
-        File apiKeyFile = new File(getFlowDir(), "api.key");
-        if (apiKeyFile.exists() == false) {
-            throw new InvalidApiKeyException("Failed to resolve api key from file=" + apiKeyFile.getAbsolutePath());
+    private ApiSettings resolveApiSettings() {
+        File apiSettingsFile = new File(getFlowDir(), "settings.json");
+        if (apiSettingsFile.exists() == false) {
+            throw new InvalidApiKeyException("Failed to resolve api settings from file=" + apiSettingsFile.getAbsolutePath());
         }
 
-        List<String> lines;
         try {
-            lines = Files.readAllLines(apiKeyFile.toPath());
-        } catch (Exception ex) {
-            throw new InvalidApiKeyException("Failed to read api key from file=" + apiKeyFile.getAbsolutePath(), ex);
+            String jsonStr = new String(Files.readAllBytes(apiSettingsFile.toPath()));
+
+            ObjectMapper mapper = new ObjectMapperBuilder()
+                    .jsr310TimeModule()
+                    .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                    .build();
+
+            return mapper.readValue(jsonStr, ApiSettings.class);
+        } catch (IOException ex) {
+            throw new InvalidApiKeyException("Failed to read api settings=" + apiSettingsFile.getAbsolutePath(), ex);
         }
-        return lines.stream()
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .findFirst()
-                .orElseThrow(() -> new InvalidApiKeyException("Failed to read api key from file=" + apiKeyFile.getAbsolutePath()));
+
     }
 
     public void addSnippet(String source, String snippet) {
@@ -169,6 +180,27 @@ public class IFMController {
             timer = null;
         }
 
+    }
+
+    private static class ApiSettings {
+        private String apiKey;
+        private String apiUrl;
+
+        public String getApiKey() {
+            return apiKey;
+        }
+
+        public void setApiKey(String apiKey) {
+            this.apiKey = apiKey;
+        }
+
+        public String getApiUrl() {
+            return apiUrl;
+        }
+
+        public void setApiUrl(String apiUrl) {
+            this.apiUrl = apiUrl;
+        }
     }
 
     private static class StaticAuthHeaderRequestInterceptor implements RequestInterceptor {
