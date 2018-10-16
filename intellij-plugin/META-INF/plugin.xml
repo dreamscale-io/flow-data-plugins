@@ -32,14 +32,20 @@
 
 	<actions>
 		<action id="org.dreamscale.flow.Snippet" class="org.dreamscale.flow.intellij.action.event.CreateSnippetEvent" text="Send Snippet to Torchie"
-                description="Sends a snippet from the currently selected text to Torchie"
-				icon="/icons/torchie.png">
+                description="Sends a snippet from the currently selected text to Torchie">
 			<keyboard-shortcut keymap="$default" first-keystroke="meta shift s"/>
 		</action>
 
 		<action id="org.dreamscale.flow.FlushBatch" class="org.dreamscale.flow.intellij.action.event.FlushBatchEvent" text="Flush current batch"
-                description="Flushes the current batch of changes to the server">
+                description="Flushes the current batch of changes to the server"
+				icon="/icons/torchie.png">
 		</action>
+
+		<group id="org.dreamscale.flow.MainToolBar" text="Flow Group" description="Flow action group">
+			<add-to-group group-id="MainToolBar" anchor="first"/>
+			<reference ref="org.dreamscale.flow.FlushBatch"/>
+			<separator/>
+		</group>
 
 		<group id="org.dreamscale.flow.EditorPopupMenu">
 			<add-to-group group-id="EditorPopupMenu" anchor="last"/>
