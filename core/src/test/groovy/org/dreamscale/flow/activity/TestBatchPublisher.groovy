@@ -91,7 +91,7 @@ class TestBatchPublisher extends Specification {
                 .build();
 
 
-        File tmpFile = File.createTempFile("messages", ".log")
+        File tmpFile = File.createTempFile("messages", ".flow")
         tmpFile << jsonConverter.toJSON(batchEvent) + "\n"
 
         when:

@@ -2,7 +2,7 @@ package org.dreamscale.flow.intellij;
 
 public class Logger implements org.dreamscale.flow.Logger {
 
-    com.intellij.openapi.diagnostic.Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("love.dreamscale");
+    com.intellij.openapi.diagnostic.Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("org.dreamscale");
 
     @Override
     public void debug(String message) {
