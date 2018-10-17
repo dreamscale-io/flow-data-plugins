@@ -55,7 +55,7 @@ public class FlowPublisher implements Runnable {
     public FlowPublisher(File baseDir, Logger logger, TimeService timeService) {
         this.logger = logger;
         this.timeService = timeService;
-        this.activeFile = new File(baseDir, "active.log");
+        this.activeFile = new File(baseDir, "active.flow");
         this.publishDir = createDir(baseDir, "publish");
         this.failedDir = createDir(baseDir, "failed");
         this.retryNextSessionDir = createDir(baseDir, "retryNextSession");
