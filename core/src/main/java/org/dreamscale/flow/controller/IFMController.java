@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Request;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
+import org.dreamscale.exception.ForbiddenException;
 import org.dreamscale.feign.DefaultFeignConfig;
 import org.dreamscale.flow.Logger;
 import org.dreamscale.flow.activity.ActivityHandler;
@@ -63,8 +64,21 @@ public class IFMController {
     }
 
     public void flushBatch() {
-        messageQueue.flush();
-        flowPublisher.flush();
+        if (isActive()) {
+            try {
+                flowClient.authPing();
+            } catch (ForbiddenException ex) {
+                flowClient = createFlowClient();
+                flowPublisher.setFlowClient(flowClient);
+            }
+            try {
+                flowClient.authPing();
+            } catch (ForbiddenException ex) {
+                throw new RuntimeException("Access denied, verify your API key is correct");
+            }
+            messageQueue.flush();
+            flowPublisher.flush();
+        }
     }
 
     public boolean isActive() {

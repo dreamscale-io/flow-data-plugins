@@ -22,6 +22,7 @@ import java.nio.channels.OverlappingFileLockException;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +42,7 @@ public class FlowPublisher implements Runnable {
     private AtomicBoolean closed = new AtomicBoolean(false);
     private AtomicReference<Thread> runThreadHolder = new AtomicReference<>();
     private JSONConverter jsonConverter = new JSONConverter();
-    private Map<File, Integer> failedFileToLastDayRetriedMap = new LinkedHashMap<>();
+    private Map<File, Integer> failedFileToLastDayRetriedMap = Collections.synchronizedMap(new LinkedHashMap<>());
     private AtomicReference<FlowClient> flowClientReference = new AtomicReference<>();
     private Logger logger;
     private File activeFile;
@@ -72,10 +73,15 @@ public class FlowPublisher implements Runnable {
     }
 
     public void flush() {
+        failedFileToLastDayRetriedMap.clear();
         Thread thread = runThreadHolder.get();
         if (thread != null) {
             thread.interrupt();
         }
+    }
+
+    public void setFlowClient(FlowClient flowClient) {
+        flowClientReference.set(flowClient);
     }
 
     public void start(FlowClient activityClient) {
@@ -138,6 +144,7 @@ public class FlowPublisher implements Runnable {
         for (File file : publishDir.listFiles()) {
             Integer lastDayTried = failedFileToLastDayRetriedMap.get(file);
             if (lastDayTried == null || lastDayTried != dayOfYear) {
+                failedFileToLastDayRetriedMap.remove(file);
                 batchesToPublish.add(file);
             }
         }
