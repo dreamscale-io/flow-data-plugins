@@ -2,6 +2,8 @@ package org.dreamscale.flow.intellij;
 
 public class Logger implements org.dreamscale.flow.Logger {
 
+    public static final Logger INSTANCE = new Logger();
+
     com.intellij.openapi.diagnostic.Logger logger = com.intellij.openapi.diagnostic.Logger.getInstance("org.dreamscale");
 
     @Override
