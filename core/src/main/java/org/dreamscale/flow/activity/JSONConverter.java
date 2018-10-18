@@ -3,7 +3,6 @@ package org.dreamscale.flow.activity;
 import com.dreamscale.htmflow.api.activity.NewEditorActivity;
 import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
 import com.dreamscale.htmflow.api.activity.NewExternalActivity;
-import com.dreamscale.htmflow.api.activity.NewIdleActivity;
 import com.dreamscale.htmflow.api.activity.NewModificationActivity;
 import com.dreamscale.htmflow.api.batch.NewBatchEvent;
 import com.dreamscale.htmflow.api.event.NewSnippetEvent;
@@ -37,7 +36,6 @@ public class JSONConverter {
         idToClassMap.put("ExecutionActivity", NewExecutionActivity.class);
         idToClassMap.put("ExternalActivity", NewExternalActivity.class);
         idToClassMap.put("ModificationActivity", NewModificationActivity.class);
-        idToClassMap.put("IdleActivity", NewIdleActivity.class);
         idToClassMap.put("Event", NewBatchEvent.class);
         idToClassMap.put("SnippetEvent", NewSnippetEvent.class);
         return idToClassMap;
