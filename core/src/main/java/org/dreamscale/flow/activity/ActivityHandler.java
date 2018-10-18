@@ -49,16 +49,8 @@ public class ActivityHandler {
         return activeFileActivity != null && activeFileActivity.getDurationInSeconds() >= SHORTEST_ACTIVITY;
     }
 
-    public void markIdleTime(final Duration idleDuration) {
-        markIdleOrExternal(idleDuration, () -> messageQueue.pushIdleActivity(idleDuration.getSeconds()));
-    }
-
     public void markExternalActivity(final Duration idleDuration, final String comment) {
         recentIdleDuration = idleDuration;
-        markIdleOrExternal(idleDuration, () -> messageQueue.pushExternalActivity(idleDuration.getSeconds(), comment));
-    }
-
-    private void markIdleOrExternal(Duration idleDuration, Runnable block) {
         if (idleDuration.getSeconds() >= SHORTEST_ACTIVITY) {
             if (activeFileActivity != null) {
                 long duration = activeFileActivity.getDurationInSeconds() - idleDuration.getSeconds();
@@ -67,7 +59,7 @@ public class ActivityHandler {
                     messageQueue.pushEditorActivity(duration, endTime, activeFileActivity.filePath, activeFileActivity.modified);
                 }
             }
-            block.run();
+            messageQueue.pushExternalActivity(idleDuration.getSeconds(), comment);
             if (activeFileActivity != null) {
                 activeFileActivity = createFileActivity(activeFileActivity.filePath);
             }

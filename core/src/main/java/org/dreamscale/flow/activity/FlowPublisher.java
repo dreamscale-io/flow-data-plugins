@@ -3,7 +3,6 @@ package org.dreamscale.flow.activity;
 import com.dreamscale.htmflow.api.activity.NewEditorActivity;
 import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
 import com.dreamscale.htmflow.api.activity.NewExternalActivity;
-import com.dreamscale.htmflow.api.activity.NewIdleActivity;
 import com.dreamscale.htmflow.api.activity.NewModificationActivity;
 import com.dreamscale.htmflow.api.batch.NewBatchEvent;
 import com.dreamscale.htmflow.api.batch.NewFlowBatch;
@@ -224,8 +223,6 @@ public class FlowPublisher implements Runnable {
             builder.editorActivity((NewEditorActivity) object);
         } else if (object instanceof NewExternalActivity) {
             builder.externalActivity((NewExternalActivity) object);
-        } else if (object instanceof NewIdleActivity) {
-            builder.idleActivity((NewIdleActivity) object);
         } else if (object instanceof NewExecutionActivity) {
             builder.executionActivity((NewExecutionActivity) object);
         } else if (object instanceof NewModificationActivity) {

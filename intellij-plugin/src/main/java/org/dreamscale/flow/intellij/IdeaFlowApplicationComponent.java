@@ -3,6 +3,7 @@ package org.dreamscale.flow.intellij;
 import com.intellij.openapi.application.ApplicationActivationListener;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.ApplicationComponent;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.IdeFrame;
@@ -92,9 +93,7 @@ public class IdeaFlowApplicationComponent extends ApplicationComponent.Adapter {
         @Override
         public void applicationActivated(IdeFrame ideFrame) {
             if (ideFrame.getProject() != null) {
-                if (deactivationHandler.isPromptingForIdleTime() == false) {
-                    deactivationHandler.markActiveFileEventAsIdleIfDeactivationThresholdExceeded(ideFrame.getProject());
-                }
+                deactivationHandler.activated();
             }
         }
 

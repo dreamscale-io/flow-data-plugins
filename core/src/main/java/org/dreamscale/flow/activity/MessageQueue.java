@@ -3,11 +3,9 @@ package org.dreamscale.flow.activity;
 import com.dreamscale.htmflow.api.activity.NewEditorActivity;
 import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
 import com.dreamscale.htmflow.api.activity.NewExternalActivity;
-import com.dreamscale.htmflow.api.activity.NewIdleActivity;
 import com.dreamscale.htmflow.api.activity.NewModificationActivity;
 import com.dreamscale.htmflow.api.batch.NewBatchEvent;
 import com.dreamscale.htmflow.api.event.EventType;
-import com.dreamscale.htmflow.api.event.NewSnippetEvent;
 import org.dreamscale.time.TimeService;
 
 import java.io.File;
@@ -78,15 +76,6 @@ public class MessageQueue {
         messageLogger.writeMessage(activity);
     }
 
-    public void pushIdleActivity(Long durationInSeconds) {
-        NewIdleActivity activity = NewIdleActivity.builder()
-                .endTime(timeService.now())
-                .durationInSeconds(durationInSeconds)
-                .build();
-
-        messageLogger.writeMessage(activity);
-    }
-
     public void pushExternalActivity(Long durationInSeconds, String comment) {
         NewExternalActivity activity = NewExternalActivity.builder()
                 .endTime(timeService.now())
@@ -105,16 +94,6 @@ public class MessageQueue {
                 .build();
 
         messageLogger.writeMessage(batchEvent);
-    }
-
-    public void pushSnippet(String source, String snippet) {
-        NewSnippetEvent snippetEvent = NewSnippetEvent.builder()
-                .position(timeService.now())
-                .source(source)
-                .snippet(snippet)
-                .build();
-
-        messageLogger.writeMessage(snippetEvent);
     }
 
 

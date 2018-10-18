@@ -11,30 +11,18 @@ import java.time.Duration;
 
 public class DeactivationHandler {
 
-    private static final String IDLE_TITLE = "Idle Time?";
-
-    private static final Duration DEACTIVATION_THRESHOLD = Duration.ofMinutes(50);
-    private static final Duration AUTO_IDLE_THRESHOLD = Duration.ofHours(8);
+    private static final Duration DEACTIVATION_THRESHOLD = Duration.ofMinutes(1);
 
     private IFMController controller;
     private ActivityHandler activityHandler;
     private Long deactivatedAt;
-    private boolean promptingForIdleTime;
 
     public DeactivationHandler(IFMController controller) {
         this.controller = controller;
         this.activityHandler = controller.getActivityHandler();
     }
 
-    public boolean isPromptingForIdleTime() {
-        return promptingForIdleTime;
-    }
-
-    public void deactivated() {
-        deactivatedAt = System.currentTimeMillis();
-    }
-
-    public void markActiveFileEventAsIdleIfDeactivationThresholdExceeded(Project project) {
+    public void activated() {
         if (controller.isInactive()) {
             return;
         }
@@ -44,25 +32,13 @@ public class DeactivationHandler {
             return;
         }
 
-        promptingForIdleTime = true;
-        try {
-            if (deactivationDuration.compareTo(AUTO_IDLE_THRESHOLD) > 0) {
-                activityHandler.markIdleTime(deactivationDuration);
-            } else if (deactivationDuration.compareTo(DEACTIVATION_THRESHOLD) > 0) {
-                boolean wasIdleTime = wasDeactivationIdleTime(project, deactivationDuration);
-                if (wasIdleTime) {
-                    activityHandler.markIdleTime(deactivationDuration);
-                } else {
-                    String comment = IdeaFlowApplicationComponent.promptForInput("External Activity Comment", "What were you doing?");
-                    activityHandler.markExternalActivity(deactivationDuration, comment);
-                }
-            } else {
-                activityHandler.markExternalActivity(deactivationDuration, null);
-            }
-        } finally {
-            deactivatedAt = null;
-            promptingForIdleTime = false;
+        if (deactivationDuration.compareTo(DEACTIVATION_THRESHOLD) > 0) {
+            activityHandler.markExternalActivity(deactivationDuration, "Editor Deactivated");
         }
+    }
+
+    public void deactivated() {
+        deactivatedAt = System.currentTimeMillis();
     }
 
     private Duration getDeactivationDuration() {
@@ -73,14 +49,6 @@ public class DeactivationHandler {
             deactivationDuration = Duration.ofMillis(deactivationLength);
         }
         return deactivationDuration;
-    }
-
-    private boolean wasDeactivationIdleTime(Project project, Duration deactivationDuration) {
-        String formattedPeriod = TimeConverter.toFormattedDuration(deactivationDuration);
-        StringBuilder messageBuilder = new StringBuilder();
-        messageBuilder.append("Were you working during the last " + formattedPeriod + "?");
-        int result = Messages.showYesNoDialog(project, messageBuilder.toString(), IDLE_TITLE, null);
-        return result != 0;
     }
 
 }
