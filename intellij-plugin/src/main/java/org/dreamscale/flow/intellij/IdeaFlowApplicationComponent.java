@@ -16,7 +16,7 @@ import javax.swing.Icon;
 
 public class IdeaFlowApplicationComponent extends ApplicationComponent.Adapter {
 
-    public static final Logger log = new Logger();
+    public static final Logger log = Logger.INSTANCE;
 
     private static final String NAME = "IdeaFlow.Component";
 

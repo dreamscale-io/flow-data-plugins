@@ -47,6 +47,12 @@
 			<separator/>
 			<reference ref="org.dreamscale.flow.Snippet"/>
 		</group>
+        
+        <group id="org.dreamscale.flow.DebuggerPopupMenu">
+            <add-to-group group-id="XDebugger.Watches.Tree.Popup" anchor="last"/>
+            <separator/>
+            <reference ref="org.dreamscale.flow.Snippet"/>
+        </group>
 
 	</actions>
 
