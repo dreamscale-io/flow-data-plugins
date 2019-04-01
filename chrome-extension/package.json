@@ -1,0 +1,14 @@
+{
+  "name": "flow-data-chrome-extension",
+  "version": "1.0.0",
+  "description": "@dreamscale flow-data chrome extension copyright 2019 DreamScale.io",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "kara@dreamscale.io",
+  "license": "MIT",
+  "repository": "github",
+  "private": true
+}
