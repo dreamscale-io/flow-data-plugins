@@ -3,7 +3,7 @@ apply plugin: 'maven-publish'
 apply plugin: 'idea'
 
 ext {
-	htmFlowVersion = "0.1"
+	gridtimeVersion = "0.1"
 }
 
 repositories {
@@ -20,10 +20,10 @@ configurations.all {
 }
 
 dependencies {
-	compile "org.dreamscale:htm-flow-rest-client:${htmFlowVersion}"
+	compile "org.dreamscale:gridtime-rest-client:${gridtimeVersion}"
 	compileOnly "org.projectlombok:lombok:1.18.2"
 
-	testCompile "org.dreamscale:htm-flow-rest-client-test:${htmFlowVersion}"
+	testCompile "org.dreamscale:gridtime-rest-client-test:${gridtimeVersion}"
 	testCompile "org.slf4j:slf4j-api:1.7.12"
 	testCompile "com.google.guava:guava:18.0"
 	testCompile "org.reflections:reflections:0.9.9-RC1"

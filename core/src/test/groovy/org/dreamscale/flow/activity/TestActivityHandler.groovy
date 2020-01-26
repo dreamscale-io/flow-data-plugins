@@ -1,8 +1,8 @@
 package org.dreamscale.flow.activity
 
-import com.dreamscale.htmflow.api.activity.NewEditorActivity
-import com.dreamscale.htmflow.api.activity.NewExecutionActivity
-import com.dreamscale.htmflow.api.activity.NewModificationActivity
+import com.dreamscale.gridtime.api.activity.NewEditorActivityDto
+import com.dreamscale.gridtime.api.activity.NewExecutionActivityDto
+import com.dreamscale.gridtime.api.activity.NewModificationActivityDto
 import org.dreamscale.flow.controller.IFMController
 import org.dreamscale.time.MockTimeService
 import spock.lang.Ignore
@@ -51,9 +51,9 @@ class TestActivityHandler extends Specification {
         handler.startFileEvent("other")
 
         then:
-        assert getMessage(0, NewEditorActivity).filePath == "file"
+        assert getMessage(0, NewEditorActivityDto).filePath == "file"
 
-        assert getMessage(0, NewEditorActivity).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS
+        assert getMessage(0, NewEditorActivityDto).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS
         assertMessageCount(1)
     }
 
@@ -74,7 +74,7 @@ class TestActivityHandler extends Specification {
         handler.startFileEvent(null)
 
         then:
-        assert getMessage(0, NewEditorActivity).filePath == "file"
+        assert getMessage(0, NewEditorActivityDto).filePath == "file"
         assertMessageCount(1)
     }
 
@@ -85,8 +85,8 @@ class TestActivityHandler extends Specification {
         handler.endFileEvent("file")
 
         then:
-        assert getMessage(0, NewEditorActivity).filePath == "file"
-        assert getMessage(0, NewEditorActivity).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS
+        assert getMessage(0, NewEditorActivityDto).filePath == "file"
+        assert getMessage(0, NewEditorActivityDto).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS
         assertMessageCount(1)
     }
 
@@ -117,7 +117,7 @@ class TestActivityHandler extends Specification {
         handler.endFileEvent(null)
 
         then:
-        assert getMessage(0, NewEditorActivity).modified == false
+        assert getMessage(0, NewEditorActivityDto).modified == false
         assertMessageCount(1)
     }
 
@@ -129,7 +129,7 @@ class TestActivityHandler extends Specification {
         handler.endFileEvent(null)
 
         then:
-        assert getMessage(0, NewEditorActivity).modified == true
+        assert getMessage(0, NewEditorActivityDto).modified == true
         assertMessageCount(1)
     }
 
@@ -140,7 +140,7 @@ class TestActivityHandler extends Specification {
         handler.fileModified("file")
         handler.pushModificationActivity(30)
         then:
-        assert getMessage(0, NewModificationActivity).modificationCount == 3
+        assert getMessage(0, NewModificationActivityDto).modificationCount == 3
     }
 
     void testMarkProcessExecution_ShouldPublishActivity_AfterStartStop() {
@@ -148,10 +148,10 @@ class TestActivityHandler extends Specification {
         handler.markProcessStarting(3, "TestMyUnit", "JUnit", true)
         handler.markProcessEnding(3, -12)
         then:
-        assert getMessage(0, NewExecutionActivity).processName == "TestMyUnit"
-        assert getMessage(0, NewExecutionActivity).executionTaskType == "JUnit"
-        assert getMessage(0, NewExecutionActivity).exitCode == -12
-        assert getMessage(0, NewExecutionActivity).isDebug() == true
+        assert getMessage(0, NewExecutionActivityDto).processName == "TestMyUnit"
+        assert getMessage(0, NewExecutionActivityDto).executionTaskType == "JUnit"
+        assert getMessage(0, NewExecutionActivityDto).exitCode == -12
+        assert getMessage(0, NewExecutionActivityDto).isDebug() == true
 
     }
 
@@ -171,8 +171,8 @@ class TestActivityHandler extends Specification {
         handler.endFileEvent(null)
 
         then:
-        assert getMessage(0, NewEditorActivity).filePath == "file1"
-        assert getMessage(0, NewEditorActivity).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS * 2
+        assert getMessage(0, NewEditorActivityDto).filePath == "file1"
+        assert getMessage(0, NewEditorActivityDto).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS * 2
         assertMessageCount(1)
     }
 
@@ -188,10 +188,10 @@ class TestActivityHandler extends Specification {
         handler.endFileEvent(null)
 
         then:
-        assert getMessage(0, NewEditorActivity).filePath == "file1"
-        assert getMessage(0, NewEditorActivity).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS
-        assert getMessage(1, NewEditorActivity).filePath == "file3"
-        assert getMessage(1, NewEditorActivity).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS
+        assert getMessage(0, NewEditorActivityDto).filePath == "file1"
+        assert getMessage(0, NewEditorActivityDto).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS
+        assert getMessage(1, NewEditorActivityDto).filePath == "file3"
+        assert getMessage(1, NewEditorActivityDto).durationInSeconds == PERSISTABLE_ACTIVITY_DURATION_SECONDS
         assertMessageCount(2)
     }
 

@@ -1,7 +1,7 @@
 package org.dreamscale.flow.activity
 
-import com.dreamscale.htmflow.api.activity.NewEditorActivity
-import com.dreamscale.htmflow.api.batch.NewBatchEvent
+import com.dreamscale.gridtime.api.activity.NewEditorActivityDto
+import com.dreamscale.gridtime.api.batch.NewFlowBatchEventDto
 import spock.lang.Specification
 
 import java.time.LocalDateTime
@@ -12,7 +12,7 @@ class TestJSONConverter extends Specification {
 
     def "toJSON/fromJSON SHOULD serialize/deserialize API types"() {
         given:
-        NewEditorActivity editorActivity = NewEditorActivity.builder()
+        NewEditorActivityDto editorActivity = NewEditorActivityDto.builder()
                 .endTime(LocalDateTime.now())
                 .durationInSeconds(5)
                 .filePath("hello.txt")
@@ -21,7 +21,7 @@ class TestJSONConverter extends Specification {
 
         when:
         String json = converter.toJSON(editorActivity)
-        NewEditorActivity deserializedActivity = (NewEditorActivity) converter.fromJSON(json)
+        NewEditorActivityDto deserializedActivity = (NewEditorActivityDto) converter.fromJSON(json)
 
         then:
         assert deserializedActivity != null
@@ -29,13 +29,13 @@ class TestJSONConverter extends Specification {
 
     def "fromJSON SHOULD not explode if = sign in comments"() {
         given:
-        NewBatchEvent event = NewBatchEvent.builder()
+        NewFlowBatchEventDto event = NewFlowBatchEventDto.builder()
                 .comment("This is a comment about an == sign that I screwed up")
                 .build()
 
         when:
         String json = converter.toJSON(event)
-        NewBatchEvent deserializedEvent = (NewBatchEvent) converter.fromJSON(json)
+        NewFlowBatchEventDto deserializedEvent = (NewFlowBatchEventDto) converter.fromJSON(json)
 
         then:
         assert deserializedEvent != null

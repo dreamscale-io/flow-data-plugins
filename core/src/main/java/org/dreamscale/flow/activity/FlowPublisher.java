@@ -1,12 +1,12 @@
 package org.dreamscale.flow.activity;
 
-import com.dreamscale.htmflow.api.activity.NewEditorActivity;
-import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
-import com.dreamscale.htmflow.api.activity.NewExternalActivity;
-import com.dreamscale.htmflow.api.activity.NewModificationActivity;
-import com.dreamscale.htmflow.api.batch.NewBatchEvent;
-import com.dreamscale.htmflow.api.batch.NewFlowBatch;
-import com.dreamscale.htmflow.client.FlowClient;
+import com.dreamscale.gridtime.api.activity.NewEditorActivityDto;
+import com.dreamscale.gridtime.api.activity.NewExecutionActivityDto;
+import com.dreamscale.gridtime.api.activity.NewExternalActivityDto;
+import com.dreamscale.gridtime.api.activity.NewModificationActivityDto;
+import com.dreamscale.gridtime.api.batch.NewFlowBatchEventDto;
+import com.dreamscale.gridtime.api.batch.NewFlowBatchDto;
+import com.dreamscale.gridtime.client.FlowClient;
 import org.dreamscale.exception.NotFoundException;
 import org.dreamscale.flow.Logger;
 import org.dreamscale.time.TimeService;
@@ -175,7 +175,7 @@ public class FlowPublisher implements Runnable {
     }
 
     private void convertPublishAndDeleteBatch(final File batchFile) {
-        NewFlowBatch batch;
+        NewFlowBatchDto batch;
         try {
             batch = convertBatchFileToObject(batchFile);
         } catch (Exception ex) {
@@ -205,16 +205,16 @@ public class FlowPublisher implements Runnable {
         return flowClient;
     }
 
-    private void publishBatch(NewFlowBatch batch) {
+    private void publishBatch(NewFlowBatchDto batch) {
         if (batch.isEmpty() == false) {
             FlowClient flowClient = acquireFlowClient();
 
-            flowClient.addBatch(batch);
+            flowClient.publishBatch(batch);
         }
     }
 
-    private NewFlowBatch convertBatchFileToObject(File batchFile) throws IOException {
-        NewFlowBatch.NewFlowBatchBuilder builder = NewFlowBatch.builder()
+    private NewFlowBatchDto convertBatchFileToObject(File batchFile) throws IOException {
+        NewFlowBatchDto.NewFlowBatchDtoBuilder builder = NewFlowBatchDto.builder()
                 .timeSent(timeService.now());
 
         BufferedReader reader = new BufferedReader(new FileReader(batchFile));
@@ -225,17 +225,17 @@ public class FlowPublisher implements Runnable {
         return builder.build();
     }
 
-    private void addObjectToBatch(NewFlowBatch.NewFlowBatchBuilder builder, final Object object) {
-        if (object instanceof NewEditorActivity) {
-            builder.editorActivity((NewEditorActivity) object);
-        } else if (object instanceof NewExternalActivity) {
-            builder.externalActivity((NewExternalActivity) object);
-        } else if (object instanceof NewExecutionActivity) {
-            builder.executionActivity((NewExecutionActivity) object);
-        } else if (object instanceof NewModificationActivity) {
-            builder.modificationActivity((NewModificationActivity) object);
-        } else if (object instanceof NewBatchEvent) {
-            builder.event((NewBatchEvent) object);
+    private void addObjectToBatch(NewFlowBatchDto.NewFlowBatchDtoBuilder builder, final Object object) {
+        if (object instanceof NewEditorActivityDto) {
+            builder.editorActivity((NewEditorActivityDto) object);
+        } else if (object instanceof NewExternalActivityDto) {
+            builder.externalActivity((NewExternalActivityDto) object);
+        } else if (object instanceof NewExecutionActivityDto) {
+            builder.executionActivity((NewExecutionActivityDto) object);
+        } else if (object instanceof NewModificationActivityDto) {
+            builder.modificationActivity((NewModificationActivityDto) object);
+        } else if (object instanceof NewFlowBatchEventDto) {
+            builder.event((NewFlowBatchEventDto) object);
         } else {
             throw new RuntimeException("Unrecognized batch object=" + String.valueOf(object));
         }

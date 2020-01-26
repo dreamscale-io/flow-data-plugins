@@ -1,11 +1,11 @@
 package org.dreamscale.flow.activity;
 
-import com.dreamscale.htmflow.api.activity.NewEditorActivity;
-import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
-import com.dreamscale.htmflow.api.activity.NewExternalActivity;
-import com.dreamscale.htmflow.api.activity.NewModificationActivity;
-import com.dreamscale.htmflow.api.batch.NewBatchEvent;
-import com.dreamscale.htmflow.api.event.NewSnippetEvent;
+import com.dreamscale.gridtime.api.activity.NewEditorActivityDto;
+import com.dreamscale.gridtime.api.activity.NewExecutionActivityDto;
+import com.dreamscale.gridtime.api.activity.NewExternalActivityDto;
+import com.dreamscale.gridtime.api.activity.NewModificationActivityDto;
+import com.dreamscale.gridtime.api.batch.NewFlowBatchEventDto;
+import com.dreamscale.gridtime.api.event.NewSnippetEventDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,12 +32,12 @@ public class JSONConverter {
 
     private Map<String, Class> createIdToClassMap() {
         Map<String, Class> idToClassMap = new HashMap<String, Class>();
-        idToClassMap.put("EditorActivity", NewEditorActivity.class);
-        idToClassMap.put("ExecutionActivity", NewExecutionActivity.class);
-        idToClassMap.put("ExternalActivity", NewExternalActivity.class);
-        idToClassMap.put("ModificationActivity", NewModificationActivity.class);
-        idToClassMap.put("Event", NewBatchEvent.class);
-        idToClassMap.put("SnippetEvent", NewSnippetEvent.class);
+        idToClassMap.put("EditorActivity", NewEditorActivityDto.class);
+        idToClassMap.put("ExecutionActivity", NewExecutionActivityDto.class);
+        idToClassMap.put("ExternalActivity", NewExternalActivityDto.class);
+        idToClassMap.put("ModificationActivity", NewModificationActivityDto.class);
+        idToClassMap.put("Event", NewFlowBatchEventDto.class);
+        idToClassMap.put("SnippetEvent", NewSnippetEventDto.class);
         return idToClassMap;
     }
 

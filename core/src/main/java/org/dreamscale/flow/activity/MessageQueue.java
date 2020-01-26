@@ -1,11 +1,11 @@
 package org.dreamscale.flow.activity;
 
-import com.dreamscale.htmflow.api.activity.NewEditorActivity;
-import com.dreamscale.htmflow.api.activity.NewExecutionActivity;
-import com.dreamscale.htmflow.api.activity.NewExternalActivity;
-import com.dreamscale.htmflow.api.activity.NewModificationActivity;
-import com.dreamscale.htmflow.api.batch.NewBatchEvent;
-import com.dreamscale.htmflow.api.event.EventType;
+import com.dreamscale.gridtime.api.activity.NewEditorActivityDto;
+import com.dreamscale.gridtime.api.activity.NewExecutionActivityDto;
+import com.dreamscale.gridtime.api.activity.NewExternalActivityDto;
+import com.dreamscale.gridtime.api.activity.NewModificationActivityDto;
+import com.dreamscale.gridtime.api.batch.NewFlowBatchEventDto;
+import com.dreamscale.gridtime.api.event.EventType;
 import org.dreamscale.time.TimeService;
 
 import java.io.File;
@@ -40,7 +40,7 @@ public class MessageQueue {
     }
 
     public void pushEditorActivity(Long durationInSeconds, LocalDateTime endTime, String filePath, boolean isModified) {
-        NewEditorActivity activity = NewEditorActivity.builder()
+        NewEditorActivityDto activity = NewEditorActivityDto.builder()
                 .endTime(endTime)
                 .durationInSeconds(durationInSeconds)
                 .filePath(filePath)
@@ -51,7 +51,7 @@ public class MessageQueue {
     }
 
     public void pushModificationActivity(Long durationInSeconds, int modificationCount) {
-        NewModificationActivity activity = NewModificationActivity.builder()
+        NewModificationActivityDto activity = NewModificationActivityDto.builder()
                 .endTime(timeService.now())
                 .durationInSeconds(durationInSeconds)
                 .modificationCount(modificationCount)
@@ -64,7 +64,7 @@ public class MessageQueue {
                                       int exitCode,
                                       String executionTaskType,
                                       boolean isDebug) {
-        NewExecutionActivity activity = NewExecutionActivity.builder()
+        NewExecutionActivityDto activity = NewExecutionActivityDto.builder()
                 .durationInSeconds(durationInSeconds)
                 .endTime(timeService.now())
                 .processName(processName)
@@ -77,7 +77,7 @@ public class MessageQueue {
     }
 
     public void pushExternalActivity(Long durationInSeconds, String comment) {
-        NewExternalActivity activity = NewExternalActivity.builder()
+        NewExternalActivityDto activity = NewExternalActivityDto.builder()
                 .endTime(timeService.now())
                 .durationInSeconds(durationInSeconds)
                 .comment(comment)
@@ -87,7 +87,7 @@ public class MessageQueue {
     }
 
     public void pushEvent(EventType eventType, String message) {
-        NewBatchEvent batchEvent = NewBatchEvent.builder()
+        NewFlowBatchEventDto batchEvent = NewFlowBatchEventDto.builder()
                 .position(timeService.now())
                 .type(eventType)
                 .comment(message)

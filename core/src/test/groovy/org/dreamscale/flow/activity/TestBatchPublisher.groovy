@@ -1,10 +1,10 @@
 package org.dreamscale.flow.activity
 
-import com.dreamscale.htmflow.api.activity.NewEditorActivity
-import com.dreamscale.htmflow.api.batch.NewBatchEvent
-import com.dreamscale.htmflow.api.batch.NewFlowBatch
-import com.dreamscale.htmflow.api.event.EventType
-import com.dreamscale.htmflow.client.FlowClient
+import com.dreamscale.gridtime.api.activity.NewEditorActivityDto
+import com.dreamscale.gridtime.api.batch.NewFlowBatchEventDto
+import com.dreamscale.gridtime.api.batch.NewFlowBatchDto
+import com.dreamscale.gridtime.api.event.EventType
+import com.dreamscale.gridtime.client.FlowClient
 import org.dreamscale.exception.NotFoundException
 import org.dreamscale.flow.Logger
 import org.dreamscale.time.MockTimeService
@@ -54,8 +54,8 @@ class TestBatchPublisher extends Specification {
         assert flowPublisher.hasSomethingToPublish()
     }
 
-    private NewEditorActivity createEditorActivity() {
-        NewEditorActivity.builder()
+    private NewEditorActivityDto createEditorActivity() {
+        NewEditorActivityDto.builder()
                 .endTime(LocalDateTime.now())
                 .durationInSeconds(5)
                 .filePath("hello.txt")
@@ -64,7 +64,7 @@ class TestBatchPublisher extends Specification {
     }
 
     private File createBatchFile() {
-        NewEditorActivity editorActivity = createEditorActivity()
+        NewEditorActivityDto editorActivity = createEditorActivity()
         File tmpFile = flowPublisher.getActiveFile()
         tmpFile << jsonConverter.toJSON(editorActivity) + "\n"
         tmpFile
@@ -75,7 +75,7 @@ class TestBatchPublisher extends Specification {
         File tmpFile = createBatchFile()
 
         when:
-        NewFlowBatch batch = flowPublisher.convertBatchFileToObject(tmpFile)
+        NewFlowBatchDto batch = flowPublisher.convertBatchFileToObject(tmpFile)
 
         then:
         assert batch != null
@@ -84,7 +84,7 @@ class TestBatchPublisher extends Specification {
 
     def "convertBatchFileToObject SHOULD support events "() {
         given:
-        NewBatchEvent batchEvent = NewBatchEvent.builder()
+        NewFlowBatchEventDto batchEvent = NewFlowBatchEventDto.builder()
                 .position(LocalDateTime.now())
                 .type(EventType.NOTE)
                 .comment("hello!")
@@ -95,7 +95,7 @@ class TestBatchPublisher extends Specification {
         tmpFile << jsonConverter.toJSON(batchEvent) + "\n"
 
         when:
-        NewFlowBatch batch = flowPublisher.convertBatchFileToObject(tmpFile)
+        NewFlowBatchDto batch = flowPublisher.convertBatchFileToObject(tmpFile)
 
         then:
         assert batch != null
@@ -112,7 +112,7 @@ class TestBatchPublisher extends Specification {
 
         then:
         assert flowPublisher.hasSomethingToPublish() == false
-        1 * mockFlowClient.addBatch(_)
+        1 * mockFlowClient.publishBatch(_)
     }
 
     def "publishBatches SHOULD mark file as failed if parsing fails"() {
@@ -132,7 +132,7 @@ class TestBatchPublisher extends Specification {
     def "publishBatches should skip batch file which fails to publish"() {
         given:
         createBatchFile()
-        mockFlowClient.addBatch(_) >> { throw new RuntimeException("Publication Failure") }
+        mockFlowClient.publishBatch(_) >> { throw new RuntimeException("Publication Failure") }
 
         when:
         flowPublisher.commitActiveFile()
@@ -146,7 +146,7 @@ class TestBatchPublisher extends Specification {
     def "publishBatches should set aside batches where the task cannot be found and resume on next session"() {
         given:
         createBatchFile()
-        mockFlowClient.addBatch(_) >> { throw new NotFoundException("task not found") }
+        mockFlowClient.publishBatch(_) >> { throw new NotFoundException("task not found") }
 
         when:
         flowPublisher.commitActiveFile()
@@ -169,7 +169,7 @@ class TestBatchPublisher extends Specification {
         given:
         int clientCallCount = 0
         createBatchFile()
-        mockFlowClient.addBatch(_) >> {
+        mockFlowClient.publishBatch(_) >> {
             clientCallCount++
             throw new Exception("you lose!")
         }

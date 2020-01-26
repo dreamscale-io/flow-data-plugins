@@ -1,8 +1,8 @@
 package org.dreamscale.flow.controller;
 
-import com.dreamscale.htmflow.api.event.EventType;
-import com.dreamscale.htmflow.api.event.NewSnippetEvent;
-import com.dreamscale.htmflow.client.FlowClient;
+import com.dreamscale.gridtime.api.event.EventType;
+import com.dreamscale.gridtime.api.event.NewSnippetEventDto;
+import com.dreamscale.gridtime.client.FlowClient;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,9 +19,13 @@ import org.dreamscale.jackson.ObjectMapperBuilder;
 import org.dreamscale.logging.RequestResponseLoggerFactory;
 import org.dreamscale.time.LocalDateTimeService;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.security.spec.KeySpec;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Timer;
@@ -141,14 +145,18 @@ public class IFMController {
 
     }
 
+    public static String decrypt(String encryptedAPIKey) {
+       //todo
+        return "";
+    }
+
     public void addSnippet(String source, String snippet) {
-        NewSnippetEvent snippetEvent = NewSnippetEvent.builder()
-                .eventType(EventType.SNIPPET)
+        NewSnippetEventDto snippetEvent = NewSnippetEventDto.builder()
                 .source(source)
                 .snippet(snippet)
                 .position(LocalDateTime.now())
                 .build();
-        flowClient.addSnippet(snippetEvent);
+        flowClient.publishSnippet(snippetEvent);
     }
 
     private static final class InvalidApiKeyException extends RuntimeException {

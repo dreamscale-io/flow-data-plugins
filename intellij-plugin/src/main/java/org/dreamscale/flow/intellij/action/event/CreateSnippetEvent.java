@@ -1,7 +1,7 @@
 package org.dreamscale.flow.intellij.action.event;
 
-import com.intellij.debugger.actions.ViewAsGroup;
-import com.intellij.debugger.engine.JavaValue;
+//import com.intellij.debugger.actions.ViewAsGroup;
+//import com.intellij.debugger.engine.JavaValue;
 import com.intellij.execution.impl.ConsoleViewUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -42,15 +42,17 @@ public class CreateSnippetEvent extends AnAction {
     }
 
     private String getDebuggerSnippet(AnActionEvent e) {
-        StringBuilder snippetBuilder = new StringBuilder(1000);
-        List<JavaValue> values = ViewAsGroup.getSelectedValues(e);
-        for (JavaValue value : values) {
-            if (snippetBuilder.length() > 0) {
-                snippetBuilder.append("\n");
-            }
-            snippetBuilder.append(value.getDescriptor().toString());
-        }
-        return snippetBuilder.length() > 0 ? snippetBuilder.toString() : null;
+        return "";
+        //TODO figure out how to do this in a version compatible way, APIs changed...
+//        StringBuilder snippetBuilder = new StringBuilder(1000);
+//        List<JavaValue> values = ViewAsGroup.getSelectedValues(e);
+//        for (JavaValue value : values) {
+//            if (snippetBuilder.length() > 0) {
+//                snippetBuilder.append("\n");
+//            }
+//            snippetBuilder.append(value.getDescriptor().toString());
+//        }
+//        return snippetBuilder.length() > 0 ? snippetBuilder.toString() : null;
     }
 
     @Override
