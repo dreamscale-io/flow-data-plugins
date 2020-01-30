@@ -1,8 +1,8 @@
 package org.dreamscale.flow.activity
 
-import com.dreamscale.gridtime.api.activity.NewEditorActivityDto
-import com.dreamscale.gridtime.api.activity.NewExecutionActivityDto
-import com.dreamscale.gridtime.api.activity.NewModificationActivityDto
+import com.dreamscale.gridtime.api.flow.activity.NewEditorActivityDto
+import com.dreamscale.gridtime.api.flow.activity.NewExecutionActivityDto
+import com.dreamscale.gridtime.api.flow.activity.NewModificationActivityDto
 import org.dreamscale.flow.controller.IFMController
 import org.dreamscale.time.MockTimeService
 import spock.lang.Ignore

@@ -20,13 +20,21 @@ public class ActionSupport {
         return controller;
     }
 
-    public static String getSelectedText(Editor editor) {
+    public static SelectedSnippet getSelectedText(Editor editor) {
         if (editor == null) {
             return null;
         }
 
         SelectionModel selectionModel = editor.getSelectionModel();
-        return selectionModel.getSelectedText();
+
+        SelectedSnippet selectedSnippet = new SelectedSnippet();
+        selectedSnippet.setText(selectionModel.getSelectedText());
+
+        if (selectionModel.getSelectionStartPosition() != null) {
+            selectedSnippet.setLineNumber(selectionModel.getSelectionStartPosition().getLine());
+        }
+
+        return selectedSnippet;
     }
 
     public static String getActiveFilePath(Project project, VirtualFile file) {

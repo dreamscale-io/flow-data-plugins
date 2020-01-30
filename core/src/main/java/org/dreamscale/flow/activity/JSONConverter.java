@@ -1,11 +1,11 @@
 package org.dreamscale.flow.activity;
 
-import com.dreamscale.gridtime.api.activity.NewEditorActivityDto;
-import com.dreamscale.gridtime.api.activity.NewExecutionActivityDto;
-import com.dreamscale.gridtime.api.activity.NewExternalActivityDto;
-import com.dreamscale.gridtime.api.activity.NewModificationActivityDto;
-import com.dreamscale.gridtime.api.batch.NewFlowBatchEventDto;
-import com.dreamscale.gridtime.api.event.NewSnippetEventDto;
+import com.dreamscale.gridtime.api.flow.activity.NewEditorActivityDto;
+import com.dreamscale.gridtime.api.flow.activity.NewExecutionActivityDto;
+import com.dreamscale.gridtime.api.flow.activity.NewExternalActivityDto;
+import com.dreamscale.gridtime.api.flow.activity.NewModificationActivityDto;
+import com.dreamscale.gridtime.api.flow.batch.NewFlowBatchEventDto;
+import com.dreamscale.gridtime.api.flow.event.NewSnippetEventDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

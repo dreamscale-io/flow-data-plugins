@@ -1,7 +1,8 @@
 package org.dreamscale.flow.controller;
 
-import com.dreamscale.gridtime.api.event.EventType;
-import com.dreamscale.gridtime.api.event.NewSnippetEventDto;
+import com.dreamscale.gridtime.api.flow.event.EventType;
+import com.dreamscale.gridtime.api.flow.event.NewSnippetEventDto;
+import com.dreamscale.gridtime.api.flow.event.SnippetSourceType;
 import com.dreamscale.gridtime.client.FlowClient;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -150,7 +151,18 @@ public class IFMController {
         return "";
     }
 
-    public void addSnippet(String source, String snippet) {
+    public void publishFileSnippet(SnippetSourceType source, String snippet, String filePath, Integer lineNumber) {
+        NewSnippetEventDto snippetEvent = NewSnippetEventDto.builder()
+                .source(source)
+                .snippet(snippet)
+                .filePath(filePath)
+                .lineNumber(lineNumber)
+                .position(LocalDateTime.now())
+                .build();
+        flowClient.publishSnippet(snippetEvent);
+    }
+
+    public void publishSnippet(SnippetSourceType source, String snippet) {
         NewSnippetEventDto snippetEvent = NewSnippetEventDto.builder()
                 .source(source)
                 .snippet(snippet)

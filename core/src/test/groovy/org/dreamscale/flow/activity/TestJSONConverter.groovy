@@ -1,7 +1,7 @@
 package org.dreamscale.flow.activity
 
-import com.dreamscale.gridtime.api.activity.NewEditorActivityDto
-import com.dreamscale.gridtime.api.batch.NewFlowBatchEventDto
+import com.dreamscale.gridtime.api.flow.activity.NewEditorActivityDto
+import com.dreamscale.gridtime.api.flow.batch.NewFlowBatchEventDto
 import spock.lang.Specification
 
 import java.time.LocalDateTime

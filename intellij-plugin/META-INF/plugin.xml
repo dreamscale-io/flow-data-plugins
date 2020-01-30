@@ -2,10 +2,10 @@
 	<id>org.dreamscale.flow</id>
 	<name>Torchie Flow Metrics</name>
 	<description>Capture automated flow metrics from your developer experience as you navigate around the code,
-		modify code, and execute tests.  This plugin is designed to work with Torchie Console.
+		modify code, and execute tests.  This plugin is designed to work with Torchie Shell.
 		For more information, see dreamscale.io
 	</description>
-	<version>0.21</version>
+	<version>0.24</version>
 	<vendor>DreamScale, Inc.</vendor>
 	<depends>com.intellij.modules.platform</depends>
 	<depends>com.intellij.modules.lang</depends>
@@ -32,7 +32,7 @@
 
 	<actions>
 		<action id="org.dreamscale.flow.Snippet" class="org.dreamscale.flow.intellij.action.event.CreateSnippetEvent" text="Send Snippet to Torchie"
-                description="Sends a snippet from the currently selected text to Torchie">
+                description="Sends a snippet from the currently selected text to Torchie" icon="/icons/take_note.png">
 			<keyboard-shortcut keymap="$default" first-keystroke="meta shift s"/>
 		</action>
 

@@ -1,11 +1,11 @@
 package org.dreamscale.flow.activity;
 
-import com.dreamscale.gridtime.api.activity.NewEditorActivityDto;
-import com.dreamscale.gridtime.api.activity.NewExecutionActivityDto;
-import com.dreamscale.gridtime.api.activity.NewExternalActivityDto;
-import com.dreamscale.gridtime.api.activity.NewModificationActivityDto;
-import com.dreamscale.gridtime.api.batch.NewFlowBatchEventDto;
-import com.dreamscale.gridtime.api.batch.NewFlowBatchDto;
+import com.dreamscale.gridtime.api.flow.activity.NewEditorActivityDto;
+import com.dreamscale.gridtime.api.flow.activity.NewExecutionActivityDto;
+import com.dreamscale.gridtime.api.flow.activity.NewExternalActivityDto;
+import com.dreamscale.gridtime.api.flow.activity.NewModificationActivityDto;
+import com.dreamscale.gridtime.api.flow.batch.NewFlowBatchEventDto;
+import com.dreamscale.gridtime.api.flow.batch.NewFlowBatchDto;
 import com.dreamscale.gridtime.client.FlowClient;
 import org.dreamscale.exception.NotFoundException;
 import org.dreamscale.flow.Logger;
