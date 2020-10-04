@@ -5,7 +5,7 @@
 		modify code, and execute tests.  This plugin is designed to work with Torchie Shell.
 		For more information, see dreamscale.io
 	</description>
-	<version>0.24</version>
+	<version>0.26</version>
 	<vendor>DreamScale, Inc.</vendor>
 	<depends>com.intellij.modules.platform</depends>
 	<depends>com.intellij.modules.lang</depends>
@@ -16,7 +16,6 @@
 	<!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
 		 on how to target different products -->
 	<!-- TODO: verify this is accurate; compile against a rubymine platform sdk and make sure everything works -->
-	<depends>com.intellij.modules.lang</depends>
 
 	<application-components>
 		<component>

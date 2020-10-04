@@ -8,7 +8,7 @@ import org.dreamscale.flow.activity.ActivityHandler;
 
 public class VirtualFileActivityHandler {
 
-    private ActivityHandler activityHandler;
+    private final ActivityHandler activityHandler;
 
     public VirtualFileActivityHandler(ActivityHandler activityHandler) {
         this.activityHandler = activityHandler;
@@ -51,9 +51,12 @@ public class VirtualFileActivityHandler {
         }
 
         if (module != null) {
-            String moduleBasePath = module.getModuleFile().getParent().getPath();
-            if (file.getPath().startsWith(moduleBasePath)) {
-                return file.getPath().substring(moduleBasePath.length());
+            VirtualFile moduleFile = module.getModuleFile();
+            if (moduleFile != null) {
+                String moduleBasePath = moduleFile.getParent().getPath();
+                if (file.getPath().startsWith(moduleBasePath)) {
+                    return file.getPath().substring(moduleBasePath.length());
+                }
             }
         } else {
             String projectBasePath = project.getBasePath();
